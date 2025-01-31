@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <?!= include('CSS'); ?>
+  <?!= include('indexCss'); ?>
+
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    .flex-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .content {
+      flex: 1;
+    }
+
+    .footer {
+      background: #f8f9fa;
+      padding: 10px 0;
+      text-align: center;
+    }
+
+
+
+
+
+    #login-container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .form-control:focus {
+      box-shadow: none;
+      border-color: red;
+      /* Rojo */
+    }
+
+    .input-group-text {
+      background-color: red;
+      /* Rojo */
+      color: #fff;
+    }
+
+    .btn-primary {
+      background-color: red;
+      /* Rojo */
+      border-color: red;
+      /* Rojo */
+    }
+
+    .btn-custom-red {
+      background-color: red;
+      /* Rojo personalizado */
+      border-color: red;
+      /* Rojo personalizado */
+      color: white;
+      /* Texto blanco */
+    }
+
+    .btn-custom-red:hover {
+      background-color: darkred;
+      /* Rojo oscuro */
+      border-color: darkred;
+      /* Rojo oscuro */
+      color: white;
+      /* Texto blanco */
+    }
+
+    #spinner {
+      display: none;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-width: 0.2em;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      margin: 0 5px;
+      padding: 5px 10px;
+    }
+  </style>
+  <style>
+    #solicitudes-table .solicitud-row {
+      transition: all 0.3s ease;
+    }
+
+    #solicitudes-table .solicitud-row:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: #f8f9fa;
+      cursor: pointer;
+    }
+
+    #solicitudes-table .solicitud-row:hover td:last-child {
+      cursor: default;
+    }
+
+    #solicitudes-table .solicitud-row td:last-child {
+      background-color: white;
+    }
+
+    @media (min-width: 1200px) {
+      .modal-xl {
+        max-width: 90%;
+      }
+    }
+
+    #detalleModal .table {
+      font-size: 0.9rem;
+    }
+
+    #detalleModal .table td,
+    #detalleModal .table th {
+      padding: 0.5rem;
+    }
+
+    .bg-custom-gray {
+      background-color: #a0a0a0;
+      /* Puedes ajustar este color según tus preferencias */
+      color: white;
+    }
+
+
+    #userDropdown {
+      border: none;
+      padding: 0.375rem 0.75rem;
+    }
+
+    #userDropdown:focus {
+      box-shadow: none;
+    }
+
+    .navbar .dropdown-toggle::after {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="flex-wrapper">
+    <div class="content">
+
+      <!-- Login para iniciar sesión-->
+      <!--
+      <div id="login-container" class="card">
+        <div class="card-body">
+          <h4 class="text-center mb-4">Solicitud de compra</h4>
+          <h5 class="card-title text-center mb-5">Login</h5>
+          <form id="login-form">
+            <div class="mb-3 input-group">
+              <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+              <input type="text" class="form-control" id="username" placeholder="Nombre de usuario" required>
+            </div>
+            <div class="mb-3 input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+            </div>
+            <button type="submit" class="btn btn-custom-red w-100" id="login-button">
+              Iniciar sesión
+              <div id="spinner" class="spinner-border text-light ms-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </button>
+          </form>
+          <div id="login-error" class="mt-3 text-danger text-center" style="display: none;">
+            Credenciales incorrectas.
+          </div>
+        </div>
+      </div>
+      -->
+
+      <!-- Login para iniciar sesión-->
+      <div id="login-container" class="card">
+        <div class="card-body">
+          <h4 class="text-center mb-4">Solicitud de compra</h4>
+          <h5 class="card-title text-center mb-5">Login</h5>
+          <form id="login-form">
+            <div class="mb-3 input-group">
+              <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+              <input type="text" class="form-control" id="username" placeholder="Nombre de usuario" required>
+            </div>
+            <div class="mb-3 input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+            </div>
+            <button type="submit" class="btn btn-custom-red w-100 mb-3" id="login-button">
+              Iniciar sesión
+              <div id="spinner" class="spinner-border text-light ms-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </button>
+          </form>
+          <!-- Botón de inicio de sesión con Google -->
+          <button type="button" class="btn btn-outline-secondary w-100" id="google-login-button">
+            <img src="https://www.google.com/favicon.ico" alt="Google logo" width="20" height="20" class="me-2">
+            Iniciar sesión con Google
+            <div id="google-spinner" class="spinner-border spinner-border-sm text-danger ms-2" role="status"
+              style="display: none;">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </button>
+          <div id="login-error" class="mt-3 text-danger text-center" style="display: none;">
+            Credenciales incorrectas.
+          </div>
+        </div>
+
+        <!-- Pie de página con el texto "Development by JerryDev" -->
+        <div class="text-center">
+          <small class="text-muted">
+            Development by JerryDev
+          </small>
+        </div>
+      </div>
+
+      <!-- Navbar (oculto inicialmente) -->
+      <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="display: none;">
+        <div class="container-fluid">
+          <h3 class="navbar-brand">SSC-AHK</h3>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <!--<a id="home-link" class="nav-link active" aria-current="page" href="#">Mis Solicitudes</a>-->
+                <a id="home-link" class="nav-link active" aria-current="page" href="#"
+                  style="background-color: #fff; color: #000; border: 1px solid #ccc; padding: 6px 12px; text-decoration: none; display: inline-block; margin-right: 10px;">Mis
+                  Solicitudes</a>
+              </li>
+              <li class="nav-item">
+                <!--<button id="request-button" class="btn" style="display: none; background-color: #fff; color: #000; border: 1px solid #ccc;">Nueva Solicitud</button>-->
+                <button id="request-button" class="btn"
+                  style="background-color: #fff; color: #000; border: 1px solid #ccc; padding: 6px 12px;">Nueva
+                  Solicitud</button>
+              </li>
+            </ul>
+            <div class="dropdown">
+              <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <span id="user-info"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="#" id="logout-button">Cerrar sesión</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Tabla de solicitudes de compra  (oculta inicialmente) -->
+      <div id="requests-table" class="card mt-3" style="display: none;">
+        <div class="card-body">
+          <h5 class="card-title">Solicitudes de compra</h5>
+          <div class="table-responsive">
+            <table class="table table-hover" id="requests-list">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Código</th>
+                  <th scope="col">Razón de Compra</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Justificación</th>
+                  <th scope="col">Total</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Seguimiento</th>
+                </tr>
+              </thead>
+              <tbody id="requests-list">
+                <!-- Aquí se llenarán dinámicamente las peticiones -->
+              </tbody>
+            </table>
+            <div class="pagination" id="pagination-controls">
+              <!-- Aquí se agregarán los controles de paginación -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario para la solicitud de compra (oculto inicialmente) -->
+      <div id="form-container" class="card mt-3" style="display: none;">
+        <!-- FORMULARIO DE SOLICITUD DE COMPRA  -->
+        <div class="container">
+          <h4 class="text-center"> Nueva Solicitud de Compra</h4>
+          <form onsubmit="enviarform(event, this)">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="DescriptCompra" class="form-label">Descripcion de la Compra * </label>
+                <textarea class="form-control" id="DescriptCompra" name="DescriptCompra"
+                  placeholder="Descripción general de la compra a realizar" required style="height: 70px"></textarea>
+              </div>
+
+              <div class="col-md-3">
+                <label for="razonCompra" class="form-label">Área de Compra *</label>
+                <select id="razonCompra" class="form-select" name="razonCompra" required>
+                  <option value="" disabled selected>Seleccione</option>
+                  <option>Gerencia</option>
+                  <option>Areas_de_Soporte</option>
+                  <option>Supervision_Lima</option>
+                  <option>Supervision_Matarani</option>
+                  <option>Supervision_Ilo</option>
+                  <option>Supervision_AAQ</option>
+                  <option>Agri</option>
+                  <option>Laboratorio</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3 col-md-6">
+                <label for="file" class="form-label">Subir Cotización (PDF)</label>
+                <input type="file" class="form-control" id="file" name="file" accept="application/pdf">
+              </div>
+              <div class="col-md-3">
+                <label for="inputState" class="form-label">Prioridad *</label>
+                <select id="inputState" class="form-select" name="prioridad" required>
+                  <option value="" disabled selected>Seleccione</option>
+                  <option>Alta</option>
+                  <option>Media</option>
+                  <option>Baja</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-md-6">
+                <label for="justificacion" class="form-label">Justificación * </label>
+                <textarea class="form-control" id="justificacion" name="justificacion"
+                  placeholder="Por favor, ingrese la justificación de la compra." required
+                  style="height: 70px"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label for="observaciones" class="form-label">Observaciones </label>
+                <textarea class="form-control" id="observaciones" name="observaciones"
+                  placeholder="Por ejemplo: garantía de los equipos, método y tiempo de pago." required
+                  style="height: 70px"></textarea>
+              </div>
+            </div>
+
+            <div class="container mt-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5>Productos</h5>
+                <button type="button" class="btn btn-primary" id="addProductBtn" data-bs-toggle="modal"
+                  data-bs-target="#addProductModal">Añadir Producto</button>
+              </div>
+              <hr>
+            </div>
+
+
+            <table class="table table-bordered mt-2">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Marca</th>
+                  <th>Cantidad</th>
+                  <th>Precio</th>
+                  <th>Justificación específica</th>
+                  <th>Especificaciones</th>
+                  <th>Centro de costos</th>
+                </tr>
+              </thead>
+              <tbody id="productTable">
+                <input type="hidden" id="productNames" name="productNames[]">
+                <input type="hidden" id="justifyCompraProds" name="justifyCompraProds[]">
+                <input type="hidden" id="productBrands" name="productBrands[]">
+                <input type="hidden" id="productQuantities" name="productQuantities[]">
+                <input type="hidden" id="productPrices" name="productPrices[]">
+                <input type="hidden" id="productSpecs" name="productSpecs[]">
+                <input type="hidden" id="productCentroCostos" name="productCentroCostos[]">
+              </tbody>
+            </table>
+            <!-- Campo oculto para almacenar la información del usuario logueado -->
+            <input type="hidden" id="loggedUser" name="loggedUser" value="">
+            <div class="col text-center">
+              <button type="submit" class="btn btn-success" id="btn-submit" name="submit">Enviar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal de procesamiento -->
+      <div class="modal fade" id="processingModal" tabindex="-1" aria-labelledby="processingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border border-danger">
+            <div class="modal-body text-center">
+              <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="mt-3">La solicitud está siendo procesada...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de resultado -->
+      <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="false">
+        <!-- Cambiar a false -->
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="resultModalLabel">Resultado</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                id="closeResultModalBtn"></button>
+            </div>
+            <div class="modal-body" id="modalMessage"></div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                id="closeResultModalFooterBtn">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal para añadir producto -->
+  <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addProductModalLabel">Añadir Producto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="productNameModal" class="form-label">Producto *</label>
+            <input type="text" class="form-control" id="productNameModal" required>
+          </div>
+          <div class="mb-3">
+            <label for="productNameModal" class="form-label">Justificación de Compra</label>
+            <input type="text" class="form-control" id="justifyCompraProdModal"
+              placeholder="Por ejem: Ingreso de personal, renovación equipo">
+          </div>
+          <div class="mb-3">
+            <label for="productBrandModal" class="form-label">Marca *</label>
+            <input type="text" class="form-control" id="productBrandModal" required>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="productQuantityModal" class="form-label">Cantidad *</label>
+              <input type="number" class="form-control" id="productQuantityModal" required>
+            </div>
+            <div class="col-md-6">
+              <label for="productPriceModal" class="form-label">Precio ($) *</label>
+              <input type="number" class="form-control" id="productPriceModal" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="productSpecsModal" class="form-label">Especificaciones</label>
+            <textarea class="form-control" id="productSpecsModal" style="height: 80%;" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="productCentroCostosModal" class="form-label">Centro de Costos *</label>
+            <select id="productCentroCosto" class="form-control" name="productCentroCosto" required>
+              <option value="" disabled selected>Seleccione</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="saveProductBtn">Guardar Producto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para detalles de solicitud -->
+  <div class="modal fade" id="detalleModal" tabindex="-1" role="dialog" aria-labelledby="detalleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <!-- El contenido se llenará dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para seguimiento de solicitud -->
+  <div class="modal fade" id="seguimientoModal" tabindex="-1" role="dialog" aria-labelledby="seguimientoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <!-- El contenido se llenará dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para añadir email -->
+  <div class="modal fade" id="addEmailModal" tabindex="-1" aria-labelledby="addEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addEmailModalLabel">Añadir Email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Por favor, ingrese su email para continuar:</p>
+          <div class="mb-3">
+            <label for="manualEmailInput" class="form-label">Email</label>
+            <input type="email" class="form-control" id="manualEmailInput" placeholder="usuario@ejemplo.com" required>
+            <div id="emailError" class="text-danger mt-2" style="display: none;">Por favor, ingrese un email válido.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="searchEmailButton">Buscar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Llamar al archivo JS -->
+  <?!= include('JS'); ?>
+  <!-- Script personalizado -->
+  <?!= include('logicaCentroCosto'); ?>
+  <!-- Script personalizado -->
+  <?!= include('SubmitIndexJs'); ?>
+  <!-- Script personalizado -->
+  <?!= include('loginJs'); ?>
+
+</body>
+
+<!-- FOOTER (siempre visible) -->
+<footer class="footer">
+  <div class="container">
+    <p>&copy; 2024 ALFRED H KNIGHT. Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+</html>

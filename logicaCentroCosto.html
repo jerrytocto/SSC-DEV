@@ -1,0 +1,95 @@
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  const razonCompraSelect = document.getElementById('razonCompra');
+  const centroCostoSelect = document.getElementById('productCentroCosto');
+
+  const centrosDeCosto = {
+    Gerencia: [
+      'Gerencia de Operaciones - 015',
+      'Gerencia de Administración y finanzas - 019',
+      'Gerente General - 021',
+      'Gerente de Recursos Humanos - 039',
+      'Gerente de Calidad - 040',
+      'Gerente de Comercial - 042',
+    ],
+    Areas_de_Soporte: [
+      'Administración General - 001',
+      'Gerencia de Administración y Finanzas - 010',	
+      'Administración de Laboratorio - 011',
+      'Gerencia Comercial - 012',
+      'Área del SIG (SSOMA) - 020',
+      'Logística - 037',
+      'IT Soporte - 038',
+      'Gerencia de RRHH - 041',
+      'Gerencia de Proyectos - 043',
+    ],
+    Supervision_Lima: [
+      'Supervisión Callao - 003',
+      'Supervisión Muestrera LEF - 009',
+      'Perubar  - 032',
+      'Impala - 033',
+      'IXM - 034',
+      'Optamine - (Logisminsa-LSA) - 049',
+      'Perubar Nitton Project - 048',
+      'Control de Calidad XRF (XRF) Lima - 049',
+      'Punta Lobitos - 052',
+      'División y Preparación de Muestras - DPM - 054',
+      'Recepción de Muestras - RM - 055',
+      'Overhead Callao - 057',
+      'Cajamarquilla - 059',
+      'Regional - 062',
+    ],
+    Supervision_Matarani: [
+      'Matarani - SMCV - 016',
+      'Hudbay - 036',
+      'Matarani - Otros - 045',
+      'Control de calidad XRF (XRF) Matarani - 053',
+      'Marcobre - 056',
+    ],
+    Supervision_Ilo: [
+      'Supervisión Ilo - 007',
+    ],
+    Supervision_AAQ: [
+      'Anglo American Quellaveco - AAQ - 058',
+    ],
+    Agri: [
+      'Perucotton - 060',
+      'Fertilizantes - 061',
+    ],
+    Laboratorio: [
+      'Impureza - Laboratorio - 022',
+      'Via Humeda - Laboratorio - 023',
+      'Via Seca - Laboratorio - 024',
+      'Instrumental - Laboratorio - 027',
+      'Via ICP - 031',
+    ],
+  };
+
+  function updateCentroCostoOptions(selectedRazon) {
+    // Limpiar las opciones actuales
+    centroCostoSelect.innerHTML = '<option selected>Seleccione</option>';
+
+    // Obtener las nuevas opciones basadas en la razón de compra seleccionada
+    const opciones = centrosDeCosto[selectedRazon] || [];
+
+    // Crear y agregar las nuevas opciones
+    opciones.forEach(function(opcion) {
+      const optionElement = document.createElement('option');
+      optionElement.value = opcion;
+      optionElement.textContent = opcion;
+      centroCostoSelect.appendChild(optionElement);
+    });
+  }
+
+  // Manejar el cambio en el select de razón de compra
+  razonCompraSelect.addEventListener('change', function() {
+    const selectedRazon = razonCompraSelect.value;
+    updateCentroCostoOptions(selectedRazon);
+  });
+
+  // Inicializar el select de centro de costo con la razón de compra por defecto
+  updateCentroCostoOptions(razonCompraSelect.value);
+});
+
+</script>
+

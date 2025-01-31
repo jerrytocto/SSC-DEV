@@ -1,0 +1,661 @@
+<script>
+
+  // Variale global que almacena el correo del usuario logueado
+  var loggedUserEmail = "";
+
+  var solicitudesPorPagina = 10;
+  var paginaActual = 1;
+  var solicitudes = []; // Aquí se almacenarán las solicitudes
+
+  // Variable para rastrear el último botón clickeado
+  let lastClicked = null;
+
+
+
+  // Función que valida que el las credenciales del usuario sean correctas
+  document.getElementById('login-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var username = document.getElementById('username').value.trim().toLowerCase();
+    var password = document.getElementById('password').value.trim();
+
+    // Mostrar spinner y deshabilitar botón
+    const loginButton = document.getElementById('login-button');
+    const spinner = document.getElementById('spinner');
+    spinner.style.display = 'inline-block';
+    loginButton.disabled = true;
+
+    // Llamada a la función de Google Apps Script para verificar las credenciales
+    google.script.run.withSuccessHandler(function (response) {
+
+      // Mostrar en consola lo que llega desde el servidor
+      console.log("Respuesta del servidor:", response);
+
+      // Ocultar spinner y habilitar botón
+      spinner.style.display = 'none';
+      loginButton.disabled = false;
+
+      if (response.isValid) {
+
+        // Limpiar el campo de contraseña
+        document.getElementById('password').value = "";
+
+        //Guardar la información en el localStorag
+        localStorage.setItem('userSession', JSON.stringify({
+          name: response.user[1],
+          email: response.user[2],
+          userId: response.user[0]
+        }));
+
+        showLoggedInUI(response.user[1], response.user[2], response.user[0]);
+
+      } else {
+        // Mostrar el mensaje de error
+        var loginErrorDiv = document.getElementById('login-error');
+        loginErrorDiv.innerText = response.message;
+        loginErrorDiv.style.display = 'block';
+      }
+    }).checkUserCredentials(username, password);
+  });
+
+  //Evento para iniciar sesión con la cuenta de google
+  document.getElementById('google-login-button').addEventListener('click', function () {
+    // LLama a la función getUserEmail en el archivo Code
+    google.script.run.withSuccessHandler(handleGoogleLogin).getUserEmail();
+  });
+
+  // Es la función que se llama después de extraer el email del usuario que se está logeando
+  function handleGoogleLogin(response) {
+
+    // Mostrar el spinner
+    const spinner = document.getElementById('google-spinner');
+    const googleLoginButton = document.getElementById('google-login-button');
+    if (spinner && googleLoginButton) {
+      spinner.style.display = 'inline-block';
+      googleLoginButton.disabled = true;
+    }
+
+    if (response.email) {
+      // Llamar a la función del servidor para verificar el correo
+      google.script.run.withSuccessHandler(function (userResponse) {
+
+        // Ocultar el spinner
+        if (spinner && googleLoginButton) {
+          spinner.style.display = 'none';
+          googleLoginButton.disabled = false;
+        }
+
+        if (userResponse.isValid) {
+          console.log("El usuario encontrado es el siguiente: " + userResponse);
+          localStorage.setItem('userSession', JSON.stringify({
+            name: userResponse.user[1],
+            email: userResponse.user[2],
+            userId: userResponse.user[0]
+          }));
+          showLoggedInUI(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
+        } else {
+          var loginErrorDiv = document.getElementById('login-error');
+          loginErrorDiv.innerText = userResponse.message;
+          loginErrorDiv.style.display = 'block';
+        }
+      }).checkUserEmail(response.email);
+
+    } else {
+      //Implica que no se pudo obtener el correo electrónico al momento de iniciar sesión
+      var loginErrorDiv = document.getElementById('login-error');
+      loginErrorDiv.innerText = "No se pudo obtener el correo electrónico. Por favor, inténtalo de nuevo.";
+      loginErrorDiv.style.display = 'block';
+    }
+    
+  }
+
+  // Función para validar email
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  //ALmecenar las variables de inicio de sesión en el local storage
+  function showLoggedInUI(name, email, userId) {
+    document.getElementById('login-container').style.display = 'none';
+    document.getElementById('navbar').style.display = 'block';
+    document.getElementById('requests-table').style.display = 'none';
+    document.getElementById('form-container').style.display = 'block';
+    document.getElementById('user-info').innerText = `Bienvenido(a) ${name}`;
+    document.getElementById('request-button').style.display = 'block';
+    document.getElementById('loggedUser').value = userId;
+    loggedUserEmail = email;
+    startSessionTimer();
+  }
+
+  let sessionTimer;
+  const SESSION_TIMEOUT = 10 * 60 * 1000; // 10 minutos en milisegundos
+
+  function startSessionTimer() {
+    if (sessionTimer) {
+      clearTimeout(sessionTimer);
+    }
+    sessionTimer = setTimeout(endSession, SESSION_TIMEOUT);
+  }
+
+  function endSession() {
+    localStorage.removeItem('userSession');
+    resetUIForLogin();
+    // Limpia los campos del formulario de solicitud
+    clearForm();
+  }
+
+  function resetUIForLogin() {
+    document.getElementById('login-container').style.display = 'block';
+    document.getElementById('navbar').style.display = 'none';
+    document.getElementById('requests-table').style.display = 'none';
+    document.getElementById('form-container').style.display = 'none';
+    document.getElementById('request-button').style.display = 'none';
+    document.getElementById('user-info').innerText = '';
+    document.getElementById('loggedUser').value = '';
+    loggedUserEmail = '';
+    if (sessionTimer) {
+      clearTimeout(sessionTimer);
+    }
+  }
+
+  function displayErrorMessage(message) {
+    var loginErrorDiv = document.getElementById('login-error');
+    loginErrorDiv.innerText = message;
+    loginErrorDiv.style.display = 'block';
+  }
+
+  // Verificar si hay una sesión activa al cargar la página
+  // Verificar si hay una sesión activa al cargar la página
+  window.addEventListener('load', function () {
+    const userSession = JSON.parse(localStorage.getItem('userSession'));
+    if (userSession) {
+      showLoggedInUI(userSession.name, userSession.email, userSession.userId);
+    } else {
+      resetUIForLogin();
+    }
+  });
+
+  // Manejador del botón de cerrar sesión
+  document.getElementById('logout-button').addEventListener('click', function (event) {
+
+    // Limpia los campos del formulario de solicitud
+    clearForm();
+    event.preventDefault();
+    endSession();
+    localStorage.removeItem('userSession');
+  });
+
+  // Manejador del botón de solicitud de compra
+  document.getElementById('request-button').addEventListener('click', function () {
+
+    // Actualizar el último clic a "formulario"
+    lastClicked = 'formulario';
+
+    // Esperar un breve momento para asegurar que el último clic sea respetado
+    setTimeout(() => {
+      // Verificar si el último clic es todavía "formulario"
+      if (lastClicked === 'formulario') {
+        // Mostrar el formulario de solicitud de compra
+        document.getElementById('form-container').style.display = 'block';
+        // Ocultar la tabla de solicitudes de compra
+        document.getElementById('requests-table').style.display = 'none';
+      }
+    }, 50);
+  });
+
+  // Manejador del enlace de "Mis solicitudes" en el navbar
+  document.getElementById('home-link').addEventListener('click', function (event) {
+    event.preventDefault(); // Evitar comportamiento predeterminado del enlace
+
+    // Actualizar el último clic a "tabla"
+    lastClicked = 'tabla';
+
+    // Esperar un breve momento para asegurar que el último clic sea respetado
+    setTimeout(() => {
+      // Verificar si el último clic es todavía "tabla"
+      if (lastClicked === 'tabla') {
+        // Mostrar la tabla de solicitudes de compra
+        document.getElementById('requests-table').style.display = 'block';
+        // Ocultar el formulario de solicitud de compra
+        document.getElementById('form-container').style.display = 'none';
+
+        // Llamar a la función del backend para cargar las solicitudes del usuario
+        google.script.run
+          .withSuccessHandler(function (solicitudesJson) {
+            try {
+              var solicitudes = JSON.parse(solicitudesJson);
+              if (solicitudes.length > 0) {
+                console.log("Solicitudes del usuario:", solicitudes);
+                inicializarPaginacion(solicitudes);
+              } else {
+                console.log("No hay solicitudes para mostrar");
+                alert("NO HAY SOLICITUDES PARA MOSTRAR");
+              }
+            } catch (e) {
+              console.error("Error al procesar las solicitudes:", e);
+            }
+          })
+          .withFailureHandler(function (error) {
+            console.error("Error al cargar las solicitudes:", error);
+          })
+          .formatSolicitudesPorEmail(loggedUserEmail);
+      }
+    }, 50);
+
+  });
+
+  // Llamar a esta función después de obtener y adaptar las solicitudes
+  function inicializarPaginacion(solicitudesAdaptadas) {
+    solicitudes = solicitudesAdaptadas;
+    llenarTablaSolicitudes(solicitudes, paginaActual);
+  }
+
+  function llenarTablaSolicitudes(solicitudes, pagina) {
+    var tbody = document.getElementById('requests-list');
+    tbody.innerHTML = ''; // Limpia el contenido existente
+
+    var inicio = (pagina - 1) * solicitudesPorPagina;
+    var fin = inicio + solicitudesPorPagina;
+    var solicitudesPagina = solicitudes.slice(inicio, fin);
+
+    solicitudesPagina.forEach(function (solicitud, index) {
+      var row = tbody.insertRow();
+      row.className = 'solicitud-row';
+
+      // Celda para el número de fila
+      var cellIndex = row.insertCell(0);
+      cellIndex.textContent = inicio + index + 1;
+
+      // Celda para el código de la solicitud
+      var cellCodigo = row.insertCell(1);
+      cellCodigo.textContent = solicitud.id;
+
+      // Celda para la razón de compra
+      var cellRazon = row.insertCell(2);
+      cellRazon.textContent = solicitud.razonCompra;
+
+      // Celda para la fecha
+      var cellFecha = row.insertCell(3);
+      cellFecha.textContent = new Date(solicitud.fechaRegistro).toLocaleDateString();
+
+      // Celda para la justificación
+      var cellJustificacion = row.insertCell(4);
+      cellJustificacion.textContent = solicitud.justificacion;
+
+      // Celda para el total
+      var cellTotal = row.insertCell(5);
+      cellTotal.textContent = '$' + solicitud.totalCompra.toFixed(2);
+
+      // Celda para el estado
+      var cellEstado = row.insertCell(6);
+      cellEstado.textContent = solicitud.estado || 'Pendiente';
+
+      // Celda para seguimiento
+      var cellSeguimiento = row.insertCell(7);
+      var btnSeguimiento = document.createElement('button');
+
+      console.log(`Estado de la solicitud (ID: ${solicitud.id}):`, solicitud.estado);
+
+      /*switch ((solicitud.estado || 'Pendiente').trim().toLowerCase()) {
+        case 'aprobada':
+          btnSeguimiento.className = 'btn btn-sm';
+          btnSeguimiento.style.backgroundColor = 'green'; // Verde para aprobado
+          btnSeguimiento.style.color = 'white';
+          break;
+        case 'rechazada':
+          btnSeguimiento.className = 'btn btn-sm';
+          btnSeguimiento.style.backgroundColor = 'red'; // Rojo para rechazado
+          btnSeguimiento.style.color = 'white';
+          break;
+        default:
+          btnSeguimiento.className = 'btn btn-sm';
+          btnSeguimiento.style.backgroundColor = 'orange'; // Amarillo para pendiente
+          btnSeguimiento.style.color = 'white';
+      }*/
+
+      btnSeguimiento.innerHTML = '<i class="bi bi-clock-history"></i>';
+
+      btnSeguimiento.onclick = function (e) {
+        e.stopPropagation(); // Evita que se active el clic de la fila
+        mostrarSeguimientoSolicitud(solicitud.id);
+      };
+
+
+      cellSeguimiento.appendChild(btnSeguimiento);
+
+      // Añadir evento de clic a toda la fila excepto la última celda
+      for (var i = 0; i < row.cells.length - 1; i++) {
+        row.cells[i].onclick = function () {
+          mostrarDetalleSolicitud(solicitud);
+        };
+      }
+    });
+    actualizarControlesPaginacion();
+  }
+
+  // Actualizar los controles de la paginación
+  function actualizarControlesPaginacion() {
+    var totalPaginas = Math.ceil(solicitudes.length / solicitudesPorPagina);
+    var paginationControls = document.getElementById('pagination-controls');
+    paginationControls.innerHTML = '';
+
+    for (var i = 1; i <= totalPaginas; i++) {
+      var btnPagina = document.createElement('button');
+      btnPagina.textContent = i;
+      btnPagina.onclick = (function (pagina) {
+        return function () {
+          paginaActual = pagina;
+          llenarTablaSolicitudes(solicitudes, paginaActual);
+        };
+      })(i);
+      paginationControls.appendChild(btnPagina);
+    }
+  }
+
+  //Función para mostrar el detalle de las solicitudes
+  function mostrarDetalleSolicitud(solicitud) {
+
+    // Mostrar un indicador de carga
+    $('#detalleModal .modal-content').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Cargando...</span></div></div>');
+    $('#detalleModal').modal('show');
+
+    var solicitudId = solicitud.id; //obtenerUltimosRegistros(solicitud.id);
+    console.log('Mostrar id de la solicitud:', solicitudId);
+
+    // Llamar a la función del backend para obtener los datos adicionales
+    google.script.run
+      .withSuccessHandler(function (detSolicitud) {
+        var detallesSolicitud = JSON.parse(detSolicitud);
+        console.log("Estos son los detalles de la solicitud " + solicitudId + " : " + detallesSolicitud);
+        //console.log('Tamaño de la solicitud:', detallesSolicitud.length);
+        if (!detallesSolicitud || detallesSolicitud.length === 0) {
+          $('#detalleModal .modal-content').html('<div class="alert alert-warning">No se encontraron detalles para la solicitud.</div>');
+          return;
+        }
+        console.log('Respuesta del servidor:', detallesSolicitud);
+        // Crear el contenido del modal con los detalles adicionales
+        var modalContent = crearContenidoModalDetalle(solicitud, detallesSolicitud);
+
+        // Actualizar el contenido del modal
+        $('#detalleModal .modal-content').html(modalContent);
+      })
+      .withFailureHandler(function (error) {
+        // Manejar errores
+        $('#detalleModal .modal-content').html('<div class="alert alert-danger">Error al cargar los detalles: ' + error + '</div>');
+      })
+      .obtenerRegistrosPorId(solicitudId);
+  }
+
+  //Función que carga los detalles de la solicitud seleccionada  
+  function crearContenidoModalDetalle(solicitudBasica, detallesSolicitud) {
+    console.log('Detalles de la solicitud:', detallesSolicitud);
+    // Extraer la información general de la primera fila
+    const infoGeneral = detallesSolicitud[0];
+
+    // Crear el contenido del modal
+    var contenido = `
+    <div class="modal-header ">
+      <h5 class="modal-title text-center">Detalle de Solicitud</h5>
+      <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="card mb-3">
+        <div class="card-header bg-custom-gray text-dark text-center">
+          <h6 class="mb-0">Información General de la Solicitud</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Número de Solicitud:</strong> ${infoGeneral[0]}</p>
+              <p><strong>Solicitante:</strong> ${infoGeneral[1]}</p>
+              <p><strong>Email:</strong> ${infoGeneral[2]}</p>
+              <p><strong>Razón de Compra:</strong> ${infoGeneral[3]}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Fecha:</strong> ${new Date(infoGeneral[4]).toLocaleDateString()}</p>
+              <p><strong>Prioridad:</strong> ${infoGeneral[5]}</p>
+              <p><strong>Justificación:</strong> ${infoGeneral[6]}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-custom-gray text-dark text-center">
+          <h6 class="mb-0">Productos Solicitados</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead class="thead-light">
+                <tr>
+                  <th>Producto</th>
+                  <th>Marca</th>
+                  <th>Especificaciones</th>
+                  <th>Centro de Costo</th>
+                  <th>Cantidad</th>
+                  <th>Precio Unitario</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${detallesSolicitud.map(row => `
+                  <tr>
+                    <td>${row[7]}</td>
+                    <td>${row[8]}</td>
+                    <td>${row[9]}</td>
+                    <td>${row[10]}</td>
+                    <td>${row[11]}</td>
+                    <td>$${parseFloat(row[12]).toFixed(2)}</td>
+                    <td>$${parseFloat(row[13]).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="font-weight-bold">
+                  <td colspan="6" class="text-right">Total:</td>
+                  <td>$${detallesSolicitud.reduce((total, row) => total + parseFloat(row[13]), 0).toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    </div>
+  `;
+
+    return contenido;
+  }
+
+
+  //Función para mostrar el seguimiento de la solicitud
+  function mostrarSeguimientoSolicitud(id) {
+
+    // Mostrar un indicador de carga
+    $('#detalleModal .modal-content').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Cargando...</span></div></div>');
+    $('#detalleModal').modal('show');
+
+
+    // Llamar a la función del backend para obtener los datos adicionales
+    google.script.run
+      .withSuccessHandler(function (aproba) {
+        var aprobadores = JSON.parse(aproba);
+        //console.log('Tamaño de la solicitud:', detallesSolicitud.length);
+        if (!aprobadores || aprobadores.length === 0) {
+          $('#detalleModal .modal-content').html('<div class="alert alert-warning">No se encontraron detalles para la solicitud.</div>');
+          return;
+        }
+        console.log('Respuesta del servidor:', aprobadores);
+
+        // Organizar aprobadores por estado
+        var aprobados = [];
+        var desaprobados = [];
+        var pendientes = [];
+
+        aprobadores.forEach(function (aprobador) {
+          switch (aprobador.estado.toLowerCase()) {
+            case 'aprobado':
+              aprobados.push(aprobador);
+              break;
+            case 'desaprobado':
+              desaprobados.push(aprobador);
+              break;
+            case 'pendiente':
+              pendientes.push(aprobador);
+              break;
+          }
+        });
+
+        function generarSeccionHTML(titulo, lista, icono, color) {
+          if (lista.length === 0) return '';
+          var html = `
+          <div class="card mb-3 border-${color}">
+            <div class="card-header bg-${color} text-white">
+              <i class="bi ${icono} me-2"></i>${titulo}
+            </div>
+            <ul class="list-group list-group-flush">
+        `;
+          lista.forEach(function (item) {
+            html += `
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>${item.nombreAprobador}</strong> 
+                  <small class="text-muted">(${item.cargo})</small>
+                </div>
+                <span class="badge bg-${color} rounded-pill">${item.fecha}</span>
+              </div>
+            </li>
+          `;
+          });
+          html += '</ul></div>';
+          return html;
+        }
+
+        var modalContent = `
+        <div class="modal-header bg-custom-gray text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-clipboard-check me-2"></i>
+            Seguimiento de Solicitud #${id}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          ${generarSeccionHTML('Aprobados', aprobados, 'bi-check-circle-fill', 'success')}
+          ${generarSeccionHTML('Desaprobados', desaprobados, 'bi-x-circle-fill', 'danger')}
+          ${generarSeccionHTML('Pendientes', pendientes, 'bi-clock-fill', 'warning')}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      `;
+
+        $('#detalleModal .modal-content').html(modalContent);
+
+      })
+      .withFailureHandler(function (error) {
+        // Manejar errores
+        $('#detalleModal .modal-content').html('<div class="alert alert-danger">Error al mostrar seguimiento de la solicitud: ' + error + '</div>');
+      })
+      .seguimientoSolicitudPorId(id);
+  }
+
+
+  function verEstadoSolicitud(id) {
+    console.log('Ver estado de la solicitud:', id);
+    // Aquí puedes implementar la lógica para mostrar el estado de la solicitud en una ventana emergente
+  }
+
+  // Script para manejar el modal y añadir productos a la tabla
+  const addProductBtn = document.getElementById("addProductBtn");
+  const saveProductBtn = document.getElementById("saveProductBtn");
+  const productTable = document.getElementById("productTable");
+
+  /**
+  *   EVENTO PARA CUANDO SE QUIERA AÑADIR UN PRODUCTO A LA TABLA DE VISUALIZACIÓN DE PRODUCTO, ESTE EVENO SE LLAMA DESPUÉS DE 
+  *   PRESIONAR EN EL BOTÓN AÑADIR PRODUCTO DEL MODAL QUE PERMITE AÑADIR PRODUCTOS 
+  */
+
+  saveProductBtn.addEventListener("click", function () {
+    const productName = document.getElementById("productNameModal").value.trim();
+    const productBrand = document.getElementById("productBrandModal").value.trim();
+    const productQuantity = document.getElementById("productQuantityModal").value.trim();
+    const productPrice = document.getElementById("productPriceModal").value.trim();
+    const productSpecs = document.getElementById("productSpecsModal").value.trim();
+    const productCentroCostos = document.getElementById("productCentroCosto").value.trim();
+    const justifyCompraProd = document.getElementById("justifyCompraProdModal").value.trim();
+
+    // Verifica que los campos del modal de añadirProducto tengan contenido para poder añadir a la tabla
+    if (productName && productBrand && productQuantity && productPrice && productCentroCostos !== "" && productSpecs) {
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+          <td>${productName}</td>
+          <td>${productBrand}</td>
+          <td>${productQuantity}</td>
+          <td>${productPrice}</td>
+          <td>${justifyCompraProd}</td>
+          <td>${productSpecs}</td>
+          <td>${productCentroCostos}</td>
+        `;
+
+      // Añado el nuevo producto 
+      productTable.appendChild(newRow);
+
+      //Añadir cada uno de los campos del formulario a los inputs ocultos
+      document.getElementById("productNames").value += `${productName}/`;
+      document.getElementById("productBrands").value += `${productBrand}/`;
+      document.getElementById("productQuantities").value += `${productQuantity}/`;
+      document.getElementById("productPrices").value += `${productPrice}/`;
+      document.getElementById("productSpecs").value += `${productSpecs}/`;
+      document.getElementById("productCentroCostos").value += `${productCentroCostos}/`;
+      document.getElementById("justifyCompraProds").value += `${justifyCompraProd}/`;
+
+      // Limpiar los campos del modal
+      clearProductModal();
+
+      // Ocultar el modal
+      const addProductModal = document.getElementById('addProductModal');
+      const modal = bootstrap.Modal.getInstance(addProductModal);
+      modal.hide();
+
+      // Mover el foco fuera del modal
+      saveProductBtn.blur();
+
+    } else {
+      alert("Por favor, complete todos los campos obligatorios.");
+    }
+  });
+
+  function clearProductModal() {
+    document.getElementById("productNameModal").value = '';
+    document.getElementById("productBrandModal").value = '';
+    document.getElementById("productQuantityModal").value = '';
+    document.getElementById("productPriceModal").value = '';
+    document.getElementById("productSpecsModal").value = '';
+    document.getElementById("productCentroCosto").value = '';
+    document.getElementById("justifyCompraProdModal").value = '';
+  }
+
+
+  function clearForm() {
+    // Obtén el formulario usando su ID
+    const form = document.getElementById('formulario-solicitud');
+
+    if (form) {
+      // Restablecer el formulario
+      form.reset();
+
+      // Restablecer campos específicos que pueden no ser afectados por reset()
+      document.getElementById('productTable').innerHTML = ''; // Limpia la tabla de productos
+    }
+  }
+
+  // Eventos para mostrar y ocultar el modal de añadir producto
+  //document.addEventListener('click', resetSessionTimer);
+  //document.addEventListener('keypress', resetSessionTimer);
+  //document.addEventListener('scroll', resetSessionTimer);
+  //document.addEventListener('mousemove', resetSessionTimer);
+</script>
