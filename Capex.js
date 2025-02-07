@@ -14,12 +14,14 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   var pdfId = "1x601kZDbaIx2nSuT2nluGpUr7W9g9i8k";      // Id de la carpeta de PDFs
   var tempId = "1F7ihMUVQZlsEyzxg90l8LBI-jzqYTJRP";     // Id de la carpeta temporal 
   var idCarpetaParaVerQR = "1Gb_2YEB1OAUwYKSjoKSmh7lZu5xhgfic";     // Id de la nueva carpeta para el PDF inicial
+  var idCarpetaCapexDoc = "1KUyNuFJDyHLFqafo-Mlv9jSs2OZitSYf";
 
   //Para poder realizar los cambios en Google Docs
   var capexPlantilla = DriveApp.getFileById(capexPlantillaId);
   var carpetaPdf = DriveApp.getFolderById(pdfId);
   var carpetaTemp = DriveApp.getFolderById(tempId);
   var carpetaParaVerQR = DriveApp.getFolderById(idCarpetaParaVerQR);
+  var carpetaCapexDoc = DriveApp.getFolderById(idCarpetaCapexDoc);
 
   // Hacer una copia de la plantilla en la carpeta temporal
   var copiaPlantilla = capexPlantilla.makeCopy(carpetaTemp);
@@ -37,7 +39,7 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   var solicitudId = registrosAprobados[0][0];
   var observaciones = registrosAprobados[0][14] ? registrosAprobados[0][14] : "";
   var usuarioEmail = registrosAprobados[0][2];
-  var descriptionCompra = registrosAprobados[0][23] ? registrosAprobados[0][23] : ""; 
+  var descriptionCompra = registrosAprobados[0][23] ? registrosAprobados[0][23] : "";
 
   var solicitante = cargarDataUsersPorEmail(usuarioEmail);
   console.log("Solicitante: " + solicitante);
@@ -103,7 +105,7 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
 
     //var productEntry = + cantidad + "  " + equipo.toUpperCase() + " " + marca.toUpperCase() + ((i + 1 < registrosAprobados.length) ? " ," : "");
     // Formato del descripAllProductsEntry
-    var descripAllProductsEntry = 
+    var descripAllProductsEntry =
       `Centro de costo: ${centroDeCosto.toUpperCase()}\n` +
       `    - ${cantidad} ${equipo.toUpperCase()} ${marca.toUpperCase()} (${justifyCompra})
              ${especificaciones}\n` +
@@ -143,8 +145,11 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   // Guardar el documento nuevamente como PDF
   doc.saveAndClose();
   //archivoPdf.setTrashed(true); // Eliminar el PDF inicial
-  var archivoPdfFinal = carpetaPdf.createFile(copiaPlantilla.getAs('application/pdf')).setName(nombreArchivo);
-  var linkPdfFinal = archivoPdfFinal.getUrl();
+  //var archivoPdfFinal = carpetaCapexDoc.createFile(copiaPlantilla.getAs('application/doc')).setName(nombreArchivo);
+  //var linkPdfFinal = archivoPdfFinal.getUrl();
+
+  var copiaDocumento = copiaPlantilla.makeCopy(nombreArchivo, carpetaCapexDoc);
+  var linkCapexDocFinal = copiaDocumento.getUrl();
 
   // Configurar los permisos del archivo PDF final
   //archivoPdfFinal.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
@@ -152,7 +157,7 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   // Eliminar la copia temporal del documento
   DriveApp.getFileById(copiaId).setTrashed(true);
 
-  return { pdf: archivoPdfFinal, link: linkPdfFinal };
+  return {link: linkCapexDocFinal };
   //return { pdf: archivoPdf, link: linkPdf };
 
   console.log("Este es una subida de prueba")

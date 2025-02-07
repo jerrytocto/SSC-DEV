@@ -153,6 +153,37 @@
     .navbar .dropdown-toggle::after {
       vertical-align: middle;
     }
+
+    /* Hacer el interruptor más grande */
+    .switch-large {
+      transform: scale(1.5);
+      border: 2px solid red;
+    }
+
+    /* Estilo cuando está activado */
+    .switch-large:checked {
+      border-color: green;
+      background-color: white !important;
+    }
+
+    /* Cambiar el color de la ruedita */
+    .switch-large::before {
+      background-color: red;
+    }
+
+    /* Cuando está activado, la ruedita se vuelve verde */
+    .switch-large:checked::before {
+      background-color: green;
+    }
+
+    /* Ajustes para centrar el texto y el switch */
+    .form-check {
+      align-items: center;
+    }
+
+    .form-check-label {
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 
@@ -305,12 +336,14 @@
           <h4 class="text-center"> Nueva Solicitud de Compra</h4>
           <form onsubmit="enviarform(event, this)">
             <div class="row">
+              <!-- Descripción de la Compra -->
               <div class="col-md-6">
                 <label for="DescriptCompra" class="form-label">Descripcion de la Compra * </label>
                 <textarea class="form-control" id="DescriptCompra" name="DescriptCompra"
                   placeholder="Descripción general de la compra a realizar" required style="height: 70px"></textarea>
               </div>
 
+              <!-- Área de Compra -->
               <div class="col-md-3">
                 <label for="razonCompra" class="form-label">Área de Compra *</label>
                 <select id="razonCompra" class="form-select" name="razonCompra" required>
@@ -324,6 +357,16 @@
                   <option>Agri</option>
                   <option>Laboratorio</option>
                 </select>
+              </div>
+
+              <!-- ¿Requiere Capex? -->
+              <div class="col-md-3 text-center mt-4">
+                <label class="form-label d-block">¿Requiere Capex?</label>
+                <div class="form-check form-switch d-flex justify-content-center">
+                  <input class="form-check-input switch-large" type="checkbox" id="requiereCapex" name="requiereCapex"
+                    onchange="toggleCapex(this)">
+                  <label class="form-check-label fw-bold ms-2" for="requiereCapex" id="capexLabel">No</label>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -462,7 +505,7 @@
               <input type="number" class="form-control" id="productQuantityModal" required>
             </div>
             <div class="col-md-6">
-              <label for="productPriceModal" class="form-label">Precio ($) *</label>
+              <label for="productPriceModal" class="form-label">Precio Unitario($) *</label>
               <input type="number" class="form-control" id="productPriceModal" required>
             </div>
           </div>
@@ -547,5 +590,23 @@
     <p>&copy; 2024 ALFRED H KNIGHT. Todos los derechos reservados.</p>
   </div>
 </footer>
+
+<script>
+  function toggleCapex(checkbox) {
+    const label = document.getElementById("capexLabel");
+
+    if (checkbox.checked) {
+      checkbox.style.borderColor = "green";
+      label.classList.add("text-success");
+      label.classList.remove("text-danger");
+      label.textContent = "SI";
+    } else {
+      checkbox.style.borderColor = "red";
+      label.classList.add("text-danger");
+      label.classList.remove("text-success");
+      label.textContent = "No";
+    }
+  }
+</script>
 
 </html>
