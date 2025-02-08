@@ -3,6 +3,88 @@
     // Acción evita que se muestre una hoja en blanco al enviar el formulario
     event.preventDefault();
 
+    // Verificar si hay productos agregados
+    const productNames = document.getElementById('productNames').value;
+    // Verificar si se requiere un CAPEX
+    const requiereCapex = document.getElementById('requiereCapex').checked;
+    // verificar si se seleccionó algún tipo de capex
+    const tipoCapex = document.getElementById('tipoCapexInput').value;
+
+    // Validamos si se añadieron productos a la SC
+    if (!productNames || productNames.trim() === '') {
+      // No hay productos, mostrar mensaje de error
+      const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+      const modalMessage = document.getElementById("modalMessage");
+
+      modalMessage.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 2rem;"></i>
+                <p class="mt-2">Debe agregar al menos un producto antes de enviar el formulario.</p>
+            </div>
+        `;
+      resultModal.show();
+      return; // Detiene la ejecución de la función
+    }
+
+    // Luego validamos el CAPEX si está activo
+    if (requiereCapex && (!tipoCapex || tipoCapex.trim() === '')) {
+      const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+      const modalMessage = document.getElementById("modalMessage");
+
+      modalMessage.innerHTML = `
+          <div class="text-center mb-4">
+              <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 2.5rem;"></i>
+              <h5 class="mt-3 fw-bold">Selección de CAPEX Requerida</h5>
+              <p class="text-muted">Ha seleccionado que requiere CAPEX. Por favor, seleccione uno de los siguientes tipos:</p>
+          </div>
+          <div class="list-group">
+              <div class="list-group-item">
+                  <div class="d-flex w-100 justify-content-between">
+                      <h6 class="mb-1 text-primary fw-bold">Cumplimiento</h6>
+                  </div>
+                  <p class="mb-1 small text-muted">Un cambio en la legislación que requiera una inversión en su cumplimiento/seguridad. 
+                      <br><em>Ejemplo: puertas cortafuegos, sistemas eléctricos, almacenamiento</em>
+                  </p>
+              </div>
+              
+              <div class="list-group-item">
+                  <div class="d-flex w-100 justify-content-between">
+                      <h6 class="mb-1 text-primary fw-bold">Diversificación</h6>
+                  </div>
+                  <p class="mb-1 small text-muted">Inversión en una nueva ubicación / proyecto o línea de productos diferente / nueva tecnología.</p>
+              </div>
+              
+              <div class="list-group-item">
+                  <div class="d-flex w-100 justify-content-between">
+                      <h6 class="mb-1 text-primary fw-bold">Expansión</h6>
+                  </div>
+                  <p class="mb-1 small text-muted">Agregar más capacidad / puede ser otro equipo para solucionar un cuello de botella o simplemente para reducir el riesgo de falla.
+                      <br><em>Ejemplo: si falla una balanza detendría la prestación del servicio</em>
+                  </p>
+              </div>
+              
+              <div class="list-group-item">
+                  <div class="d-flex w-100 justify-content-between">
+                      <h6 class="mb-1 text-primary fw-bold">Reemplazo</h6>
+                  </div>
+                  <p class="mb-1 small text-muted">Reemplazo de un artículo viejo por un nuevo. El reemplazo se hace necesario debido al desgaste o a la obsolescencia.</p>
+              </div>
+              
+              <div class="list-group-item">
+                  <div class="d-flex w-100 justify-content-between">
+                      <h6 class="mb-1 text-primary fw-bold">Especulativo</h6>
+                  </div>
+                  <p class="mb-1 small text-muted">Contribuye indirectamente a los ingresos, es decir, instalaciones de bienestar para el personal.
+                      <br><em>Ejemplo: nuevo comedor, aire acondicionado, área de estacionamiento para el personal</em>
+                  </p>
+              </div>
+          </div>
+        `;
+      resultModal.show();
+      return;
+    }
+
+
     console.log(form);
     console.log(JSON.stringify(form, null, 2));
     const button = document.getElementById("btn-submit");
@@ -69,7 +151,7 @@
       .uploadFiles(form);
   }
 
-
+  /*
   // Configuración de eventos para el modal de resultado
   const resultModal = document.getElementById('resultModal');
 
@@ -108,6 +190,60 @@
 
   document.getElementById('closeResultModalFooterBtn').addEventListener('click', function () {
     location.replace(location.href);
+  });*/
+  // Configuración de eventos para el modal de resultado
+  const resultModal = document.getElementById('resultModal');
+
+  // Manejar el foco y la accesibilidad al mostrar el modal
+  resultModal.addEventListener('show.bs.modal', function () {
+    // Desenfocar cualquier elemento activo
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+  });
+
+  resultModal.addEventListener('shown.bs.modal', function () {
+    // Establecer el foco en el botón de cierre
+    const closeButton = this.querySelector('.btn-close');
+    if (closeButton) {
+      closeButton.focus();
+    }
+  });
+
+  // Modificar el evento hidden.bs.modal para verificar si fue un envío exitoso
+  resultModal.addEventListener('hidden.bs.modal', function () {
+    // Limpiar cualquier foco residual
+    this.querySelectorAll('button, a, input').forEach(el => {
+      el.blur();
+    });
+
+    // Verificar si el mensaje en el modal es de éxito
+    const modalMessage = document.getElementById("modalMessage");
+    const isSuccess = modalMessage.querySelector('.text-success');
+
+    // Solo recargar si fue un envío exitoso
+    if (isSuccess) {
+      window.location.reload(true);
+    }
+  });
+
+  // Modificar los manejadores de eventos para los botones de cierre
+  document.getElementById('closeResultModalBtn').addEventListener('click', function () {
+    const modalMessage = document.getElementById("modalMessage");
+    const isSuccess = modalMessage.querySelector('.text-success');
+
+    if (isSuccess) {
+      window.location.reload(true);
+    }
+  });
+
+  document.getElementById('closeResultModalFooterBtn').addEventListener('click', function () {
+    const modalMessage = document.getElementById("modalMessage");
+    const isSuccess = modalMessage.querySelector('.text-success');
+
+    if (isSuccess) {
+      location.replace(location.href);
+    }
   });
 </script>
 

@@ -388,6 +388,7 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
 
   var observaciones = form.observaciones ? form.observaciones : "";
   var requiereCapex = form.requiereCapex;
+  var tipoCapex = form.tipoCapex ? form.tipoCapex : "";
   var trasnRequiredCapex = requiereCapex == "on" ? "SI" : "NO";
 
 
@@ -443,11 +444,11 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
     if (totalCompra <= 500) {
       var jefeArea = determinarDestinatario(totalCompra, formatSolicitante);
 
-      fila.push("Pendiente", jefeArea.solicitante.email, "", "", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", trasnRequiredCapex);
+      fila.push("Pendiente", jefeArea.solicitante.email, "", "", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", trasnRequiredCapex, tipoCapex);
     } else {
       var primerAprobador = determinarDestinatario(totalCompra, formatSolicitante);
       //var segundoAprobador = determinarDestinatario(totalCompra, primerAprobador);
-      fila.push("Pendiente", primerAprobador.solicitante.email, "", "Pendiente", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", trasnRequiredCapex);
+      fila.push("Pendiente", primerAprobador.solicitante.email, "", "Pendiente", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", trasnRequiredCapex,tipoCapex);
     }
     sheetRegistro.appendRow(fila);
     console.log("Fila de la hoja de registro: " + fila);

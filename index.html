@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+
   <?!= include('CSS'); ?>
   <?!= include('indexCss'); ?>
 
@@ -184,6 +185,31 @@
     .form-check-label {
       font-size: 1.2rem;
     }
+
+    /* Cambiar el borde del select a rojo */
+    .form-select {
+      border: 2px solid red;
+    }
+
+    /* Cambiar el color de fondo y el texto cuando se pasa el mouse sobre una opción */
+    .form-select option:hover {
+      background-color: red;
+      color: white;
+    }
+
+    #dropdownCapex.form-select {
+      cursor: pointer;
+    }
+
+
+    #dropdownCapex.form-select {
+      cursor: pointer;
+    }
+
+    /* Ocultar el div del tipo de capex por defecto */
+    .tipo-capex-container {
+      display: none;
+    }
   </style>
 </head>
 
@@ -352,8 +378,6 @@
                   <option>Areas_de_Soporte</option>
                   <option>Supervision_Lima</option>
                   <option>Supervision_Matarani</option>
-                  <option>Supervision_Ilo</option>
-                  <option>Supervision_AAQ</option>
                   <option>Agri</option>
                   <option>Laboratorio</option>
                 </select>
@@ -382,6 +406,34 @@
                   <option>Media</option>
                   <option>Baja</option>
                 </select>
+              </div>
+              <!-- Seleccionar tipo de CAPEX (Dropdown) -->
+              <div class="col-md-3 tipo-capex-container">
+                <label class="form-label">Tipo de capex *</label>
+                <div class="dropdown">
+                  <button class="form-select" type="button" id="dropdownCapex" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    Seleccione
+                  </button>
+                  <ul class="dropdown-menu w-100" aria-labelledby="dropdownCapex">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                        title="Un cambio en la legislación que requiera una inversión en su cumplimiento/seguridad. Ejm: puertas cortafuegos, sistemas eléctricos, almacenamiento ">Cumplimiento</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                        title="Inversión en una nueva ubicación / proyecto o línea de productos diferente / nuevo tecnología">Diversificación</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Agregar más capacidad / puede ser otro equipo para solucionar un cuello de botella o simplemente  para reducir el riesgo de falla.
+                               Por ejemplo: si falla una balanza detendría la prestación del servicio">Expansión</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                        title="Reemplazo de un artículo viejo por un nuevo. El reemplazo se hace necesario debido al desgaste o a la obsolescencia. ">Reemplazo</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Contribuye indirectamente a los ingresos, es decir, instalaciones de bienestar para el personal, nuevo comedor,
+                               aire acondicionado,área de estacionamiento para el personal, etc">Especulativo</a>
+                    </li>
+                  </ul>
+                </div>
+                <input type="hidden" name="tipoCapex" id="tipoCapexInput" required>
               </div>
             </div>
             <div class="row mt-2">
@@ -591,22 +643,52 @@
   </div>
 </footer>
 
+</html>
+
 <script>
   function toggleCapex(checkbox) {
     const label = document.getElementById("capexLabel");
+    const tipoCapexDiv = document.querySelector("#dropdownCapex").closest(".col-md-3"); // Selecciona el div contenedor
 
     if (checkbox.checked) {
+      // Cuando se activa el capex
       checkbox.style.borderColor = "green";
       label.classList.add("text-success");
       label.classList.remove("text-danger");
       label.textContent = "SI";
+      tipoCapexDiv.style.display = "block"; // Muestra el dropdown
+      document.querySelector("#tipoCapexInput").required = true; // Hace el campo requerido
     } else {
+      // Cuando se desactiva el capex
       checkbox.style.borderColor = "red";
       label.classList.add("text-danger");
       label.classList.remove("text-success");
       label.textContent = "No";
+      tipoCapexDiv.style.display = "none"; // Oculta el dropdown
+      document.querySelector("#tipoCapexInput").required = false; // Quita el requerido
+
+      // Resetear el dropdown a su estado inicial
+      document.querySelector("#dropdownCapex").textContent = "Seleccione";
+      document.querySelector("#tipoCapexInput").value = "";
     }
   }
-</script>
 
-</html>
+  // Inicializar todos los tooltips
+  document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Manejar la selección del dropdown
+    document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(item => {
+      item.addEventListener('click', function (e) {
+        e.preventDefault();
+        const selectedValue = this.textContent.trim();
+        document.querySelector('#dropdownCapex').textContent = selectedValue;
+        document.querySelector('#tipoCapexInput').value = selectedValue;
+      });
+    });
+  });
+</script>
