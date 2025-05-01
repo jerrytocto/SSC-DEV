@@ -214,39 +214,46 @@
             </tr>
           </thead>
           <tbody>
-            <? var total = 0; ?>
-            <? for (var i = 0; i < tablaSolicitud.length; i++) { ?>
+            <? for (var i = 0; i < listProductos.length; i++) { ?>
             <tr>
               <!-- Número de fila -->
               <th scope="row">
                 <?= (i + 1); ?>
               </th>
 
-              <!-- Producto, Marca, Especificaciones (posición fija en columnas 7, 8, 9) -->
-              <? for (var j = 7; j < 10; j++) { ?>
+              <!-- Producto, Marca, Especificaciones -->
               <td>
-                <?= tablaSolicitud[i][j]; ?>
+                <?= listProductos[i].nombreProducto ; ?>
               </td>
-              <? } ?>
-
-              <!-- Justificación de Compra (columna 22) -->
               <td>
-                <? if (tablaSolicitud[i][22] !== undefined && tablaSolicitud[i][22] !== null) { ?>
-                <?= tablaSolicitud[i][22]; ?>
-                <? } else { ?>
-                ---
-                <? } ?>
+                <?= listProductos[i].marca ; ?>
+              </td>
+              <td>
+                <?= listProductos[i].especificaciones ; ?>
               </td>
 
-              <!-- Centro de costo, Cantidad, Precio, Subtotal (columnas 10, 11, 12, 13) -->
-              <? for (var j = 10; j < 14; j++) { ?>
+              <!-- Justificación de Compra por producto -->
               <td>
-                <?= tablaSolicitud[i][j]; ?>
+                <?= listProductos[i].justificacionPorProducto ; ?>
               </td>
-              <? } ?>
+
+              <!-- Centro de costo, Cantidad, Precio, Subtotal -->
+              <td>
+                <?= listProductos[i].centroCosto ; ?>
+              </td>
+              <td>
+                <?= listProductos[i].cantidad ; ?>
+              </td>
+              <td>
+                <?= listProductos[i].precio ; ?>
+              </td>
+              <td>
+                <?= listProductos[i].subtotal ; ?>
+              </td>
             </tr>
             <? } ?>
           </tbody>
+
           <? if (totalCompra) { ?>
           <tfoot>
             <tr class="total-row">

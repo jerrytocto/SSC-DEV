@@ -313,10 +313,10 @@ function uploadFiles(form) {
     }
   }
 
-  var totalCompra;
+  var retornoDeResitrarProductos;
   try {
-    totalCompra = registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, formatSolicitante);
-    console.log("LLama a la función registrarProductos : " + totalCompra);
+    retornoDeResitrarProductos = registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, formatSolicitante);
+    console.log("LLama a la función registrarProductos : " + retornoDeResitrarProductos.totalCompra);
   } catch (error) {
     return "ERROR: No se pudieron registrar los productos. " + error.message;
   }
@@ -325,7 +325,7 @@ function uploadFiles(form) {
   console.log("");
 
   try {
-    var enviarMail = enviarEmail(totalCompra, solicitudId, formatSolicitante, false);
+    var enviarMail = enviarEmail(retornoDeResitrarProductos, solicitudId, formatSolicitante, false);
     console.log("LLama a la función enviarEmail : " + enviarMail);
   } catch (error) {
     return "ERROR: No se pudo enviar el email. " + error.message;
@@ -377,13 +377,10 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
   var totalCompra = 0;
   var productos = obtenerDatosProductos(form);
 
-  var observaciones = form.observaciones ? form.observaciones : "";
-  //var requiereCapex = form.requiereCapex;
-  //var tipoCapex = form.tipoCapex ? form.tipoCapex : "";
-  //var trasnRequiredCapex = requiereCapex == "on" ? "SI" : "NO";
+  var observaciones = form.observaciones || "";
 
   var requiereCapex = form.requiereCapex; // "Sí" o "No"
-  var tipoCapex = form.tipoCapex ? form.tipoCapex : ""; // Tipo de inversión seleccionado o vacío
+  var tipoCapex = form.tipoCapex || ""; // Tipo de inversión seleccionado o vacío
 
 
   productos.forEach((producto) => {
@@ -391,67 +388,111 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
     totalCompra += subtotal;
   });
 
+  // Arreglo para devolver los productos registrados
+  var productosRegistrados = [];
+
   console.log("Solicitante en la función registrarProductos: " + formatSolicitante.solicitante);
   console.log("Solicitante en la función registrarProductos: " + formatSolicitante.solicitante.names);
   console.log("Solicitante en la función registrarProductos: " + formatSolicitante.solicitante.email);
   console.log("Solicitante en la función registrarProductos: " + formatSolicitante.solicitante);
 
+  // Segundo forEach: registrar productos
   productos.forEach((producto) => {
     var subtotal = calcularSubtotal(producto.cantidad, producto.precio);
 
-    console.log("Solicitante en la función registrarProductos en el bucle: " + formatSolicitante.solicitante.names);
-    console.log("Solicitante en la función registrarProductos en el bucle: " + formatSolicitante.solicitante.email);
-    console.log("Solicitud ID: " + solicitudId);
-    console.log("Razon de compra: " + form.razonCompra);
-    console.log("Fecha de registro: " + fechaRegistro);
-    console.log("Prioridad: " + form.prioridad);
-    console.log("Justificación: " + form.justificacion);
-    console.log("Producto: " + producto.nombre);
-    console.log("Marca: " + producto.marca);
-    console.log("Especificaciones: " + producto.especificaciones);
-    console.log("Centro de costo: " + producto.centroCosto);
-    console.log("Cantidad: " + producto.cantidad);
-    console.log("Precio: " + producto.precio);
-    console.log("Subtotal: " + subtotal);
-    console.log("Observaciones: " + observaciones);
-    Logger.log("Requiere Capex: " + requiereCapex);
-
+    // Armar fila con los 32 campos exactos
     var fila = [
-      solicitudId,
-      formatSolicitante.solicitante.names,
-      formatSolicitante.solicitante.email,
-      form.razonCompra,
-      fechaRegistro,
-      form.prioridad,
-      form.justificacion,
-      producto.nombre,
-      producto.marca,
-      producto.especificaciones,
-      producto.centroCosto,
-      producto.cantidad,
-      producto.precio,
-      subtotal,
-      observaciones
+      solicitudId,                                          // ID
+      formatSolicitante.solicitante.names,                 // NOMBRE Y APELLIDOS
+      formatSolicitante.solicitante.email,                 // EMAIL
+      form.razonCompra,                                     // RAZÓN DE COMPRA
+      fechaRegistro,                                        // FECHA DE REGISTRO
+      form.prioridad,                                       // PRIORIDAD
+      form.justificacion,                                   // JUSTIFICACIÓN GENERAL
+      producto.nombre,                                      // PRODUCTO
+      producto.marca,                                       // MARCA
+      producto.especificaciones,                            // ESPECIFICACIONES
+      producto.centroCosto,                                 // CENTRO DE COSTO
+      producto.cantidad,                                    // CANTIDAD
+      producto.precio,                                      // PRECIO
+      subtotal,                                             // SUBTOTAL
+      observaciones                                         // OBSERVACIONES DE LA COMPRA
     ];
 
-    //Determinar el destinatario para su aprobación de la solicitud de compra 
+    // Columnas 16–20: Aprobaciones
     if (totalCompra <= 500) {
       var jefeArea = determinarDestinatario(totalCompra, formatSolicitante);
-
-      fila.push("Pendiente", jefeArea.solicitante.email, "", "", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", requiereCapex, tipoCapex);
+      fila.push(
+        "Pendiente",                                        // ESTADO PRIMERA APROBACIÓN
+        jefeArea.solicitante.email,                         // APROBADO POR
+        "",                                                 // FECHA DE APROBACIÓN
+        "",                                                 // ESTADO SEGUNDA APROBACIÓN
+        ""                                                  // APROBADO POR GERENTE
+      );
     } else {
       var primerAprobador = determinarDestinatario(totalCompra, formatSolicitante);
-      //var segundoAprobador = determinarDestinatario(totalCompra, primerAprobador);
-      fila.push("Pendiente", primerAprobador.solicitante.email, "", "Pendiente", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", requiereCapex, tipoCapex);
+      fila.push(
+        "Pendiente",                                        // ESTADO PRIMERA APROBACIÓN
+        primerAprobador.solicitante.email,                 // APROBADO POR
+        "",                                                 // FECHA DE APROBACIÓN
+        "Pendiente",                                        // ESTADO SEGUNDA APROBACIÓN
+        ""                                                  // APROBADO POR GERENTE
+      );
     }
+
+    fila.push(
+      "",                     // FECHA DE APROBACIÓN (Gerente)
+      cotizacionUrl,          // LINK DE COTIZACIÓN
+      producto.justifyCompraProds || "", // JUSTIFICACIÓN INDIVIDUAL
+      form.DescriptCompra || "",         // DESCRIPCIÓN DE LA COMPRA
+      "",                     // LINK DE CAPEX
+      "",                     // LINK DE CAPEX FIRMADO
+      "",                     // Fecha Última Notificación (Gerente Área)
+      "",                     // Contador Notificaciones (Gerente Área)
+      "",                     // Fecha Última Notificación (Gerente General)
+      "",                     // Contador Notificaciones (Gerente General)
+      requiereCapex,          // ES ACTIVO
+      tipoCapex               // TIPO DE CAPEX
+    );
+
+    // Asegurar 32 columnas
+    //while (fila.length < 32) fila.push("");
+
+    // Escribir en hoja
     sheetRegistro.appendRow(fila);
-    console.log("Fila de la hoja de registro: " + fila);
-    console.log(fila);
+
+    // Guardar producto registrado
+    productosRegistrados.push({
+      solicitudId: solicitudId,
+      solicitante: formatSolicitante.solicitante.names,
+      email: formatSolicitante.solicitante.email,
+      razonCompra: form.razonCompra,
+      fechaRegistro: fechaRegistro,
+      prioridad: form.prioridad,
+      justificacion: form.justificacion,
+      nombreProducto: producto.nombre,
+      marca: producto.marca,
+      especificaciones: producto.especificaciones,
+      centroCosto: producto.centroCosto,
+      cantidad: producto.cantidad,
+      precio: producto.precio,
+      subtotal: subtotal,
+      observaciones: observaciones,
+      estado1: "Pendiente",
+      aprobador1: totalCompra <= 500 ? jefeArea.solicitante.email : primerAprobador.solicitante.email,
+      cotizacionUrl: cotizacionUrl,
+      justificacionPorProducto : producto.justifyCompraProds || "",
+      descripcionCompra: form.DescriptCompra || "",
+      requiereCapex: requiereCapex,
+      tipoCapex: tipoCapex
+    });
   });
 
-  return totalCompra;
+  return {
+    totalCompra: totalCompra,
+    productos: productosRegistrados
+  };
 }
-
 
 // Maneja la solicitud de actualización de estado
 function handleEstadoRequest(e, cotizacionUrl) {
@@ -1117,28 +1158,37 @@ function enviarCorreoCompras(
 }
 
 // Función para enviar email para su aprobación
-function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
-  var filteredData = obtenerUltimosRegistros(solicitudId);
+function enviarEmail(retornoDeResitrarProductos, solicitudId, formatSolicitante, esAviso) {
 
   var htmlTemplate = HtmlService.createTemplateFromFile("tablaRequisitosEmail");
   //var scriptUrl = ScriptApp.getService().getUrl(); // Obtén la URL del script
   var scriptUrl = obtenerUrl();
+  var listProductos = retornoDeResitrarProductos.productos;
+
+  // Formatear los precios y subtotales de los productos
+  listProductos = listProductos.map((p) => {
+    return {
+      ...p,
+      precio: formatearMoneda(p.precio),
+      subtotal: formatearMoneda(p.subtotal)
+    };
+  });
 
   // Obtener el enlace del documento PDF desde la columna 21
-  var linkCotizacion = filteredData[0][21] ? filteredData[0][21] : "";
+  var linkCotizacion = listProductos[0].linkCotizacion || "";
 
-  htmlTemplate.tablaSolicitud = filteredData;
-  htmlTemplate.totalCompra = totalCompra ? totalCompra.toFixed(2) : "0.00";
+  htmlTemplate.listProductos = listProductos;
+  htmlTemplate.totalCompra = formatearMoneda(retornoDeResitrarProductos.totalCompra);
   htmlTemplate.solicitudId = solicitudId;
   htmlTemplate.emisor = formatSolicitante.solicitante.names + " - " + formatSolicitante.solicitante.cargo;
-  htmlTemplate.razonDeCompra = filteredData[0][3];
-  htmlTemplate.fechaSolicitud = filteredData[0][4];
-  htmlTemplate.justificacion = filteredData[0][6];
-  htmlTemplate.descriptionCompra = filteredData[0][23];
-  htmlTemplate.activo = filteredData[0][30] ? filteredData[0][30] : "NO";
-  htmlTemplate.tipoInversion = filteredData[0][31] ? filteredData[0][31] : "";
-  htmlTemplate.centroDeCosto = filteredData[0][10];
-  htmlTemplate.observaciones = filteredData[0][14] ? filteredData[0][14] : "";
+  htmlTemplate.razonDeCompra = listProductos[0].razonCompra;
+  htmlTemplate.fechaSolicitud = listProductos[0].fechaRegistro;
+  htmlTemplate.justificacion = listProductos[0].justificacion;
+  htmlTemplate.descriptionCompra = listProductos[0].descripcionCompra;
+  htmlTemplate.activo = listProductos[0].requiereCapex || "NO";
+  htmlTemplate.tipoInversion = listProductos[0].tipoCapex || "";
+  htmlTemplate.centroDeCosto = listProductos[0].centroCosto;
+  htmlTemplate.observaciones = listProductos[0].observaciones|| "";
   htmlTemplate.mostrarCampoAprobador = 0;
   htmlTemplate.paraAprobar = true;
   htmlTemplate.nombreCargoAprobador = '';
@@ -1147,7 +1197,7 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
   htmlTemplate.linkCotizacion = linkCotizacion;
   htmlTemplate.linkCapex = "";
 
-  var destinatario = determinarDestinatario(totalCompra, formatSolicitante);
+  var destinatario = determinarDestinatario(retornoDeResitrarProductos.totalCompra, formatSolicitante);
 
   var destinatarioId = destinatario.solicitante.id;
 
@@ -1158,7 +1208,7 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
     var html = htmlTemplate.evaluate().getContent();
 
     //Correo para la persona encargada de la aprobación
-    GmailApp.sendEmail(destinatario.solicitante.email, ("SOLICITUD DE COMPRA " + filteredData[0][0]), "MENSAJE DEL EMAIL", {
+    GmailApp.sendEmail(destinatario.solicitante.email, ("SOLICITUD DE COMPRA " + listProductos[0].solicitudId), "MENSAJE DEL EMAIL", {
       htmlBody: html
     });
 
@@ -1167,7 +1217,7 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
     var htmlParaSolicitante = htmlTemplate.evaluate().getContent();
 
     // Enviar correo para el solicitante
-    GmailApp.sendEmail(formatSolicitante.solicitante.email, ("EL REGISTRO DE TU SOLICITUD DE COMPRA " + filteredData[0][0]) + " FUE EXITOSA", "ESTIMADO, TU SOLICITUD DE COMPRA ESTÁ EN CURSO", {
+    GmailApp.sendEmail(formatSolicitante.solicitante.email, ("EL REGISTRO DE TU SOLICITUD DE COMPRA " + listProductos[0].solicitudId) + " FUE EXITOSA", "ESTIMADO, TU SOLICITUD DE COMPRA ESTÁ EN CURSO", {
       htmlBody: htmlParaSolicitante
     });
 
@@ -1175,7 +1225,7 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
 
     correosDeCompras.forEach((email) => {
       //Enviar correo inicial para el área de compras 
-      GmailApp.sendEmail(email, ("NUEVA SOLICITUD DE COMPRA GENERADA CON ID" + filteredData[0][0]) + "", "ESTIMADO(A), ESTA SOLICITUD ESTÁ PENDIENTE DE APROBACIÓN", {
+      GmailApp.sendEmail(email, ("NUEVA SOLICITUD DE COMPRA GENERADA CON ID" + listProductos[0].solicitudId) + "", "ESTIMADO(A), ESTA SOLICITUD ESTÁ PENDIENTE DE APROBACIÓN", {
         htmlBody: htmlParaSolicitante
       });
     });
@@ -1183,10 +1233,22 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
   } else {
     var html = htmlTemplate.evaluate().getContent();
     //Correo para la persona encargada de la aprobación
-    GmailApp.sendEmail(destinatario.solicitante.email, ("NOTIFICACIÓN DE APROBACIÓN PARA LA SOLICITUD DE COMPRA " + filteredData[0][0]), "MENSAJE DEL EMAIL", {
+    GmailApp.sendEmail(destinatario.solicitante.email, ("NOTIFICACIÓN DE APROBACIÓN PARA LA SOLICITUD DE COMPRA " + listProductos[0].solicitudId), "MENSAJE DEL EMAIL", {
       htmlBody: html
     });
   }
+}
+
+function formatearMoneda(totalCompra) {
+  if (totalCompra === undefined || totalCompra === null) {
+    return "0.00"; // Retorna un valor por defecto si totalCompra es indefinido o nulo
+
+  }
+  var totalFormateado = totalCompra.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+  return totalFormateado;
 }
 
 //Extraer lista de correos para el área de compras 
