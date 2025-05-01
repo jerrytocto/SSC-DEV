@@ -161,7 +161,20 @@
         </li>
         <li class="list-group-item">
           <div class="row">
-            <div class="col-sm-6"><span class="font-weight-bold"><b>Justifiación General:</b></span>
+            <div class="col-sm-6"><span class="font-weight-bold"><b>Activo:</b></span>
+              <?= activo; ?>
+            </div>
+            <? if (activo === "SI") { ?>
+            <div class="col-sm-6"><span class="font-weight-bold"><b>Tipo de Inversión:</b></span>
+              <?= tipoInversion; ?>
+            </div>
+            <? } ?>
+          </div>
+        </li>
+
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-sm-6"><span class="font-weight-bold"><b>Justificación General:</b></span>
               <b>
                 <?= justificacion?>
               </b>

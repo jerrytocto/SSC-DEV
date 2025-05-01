@@ -10,10 +10,10 @@ function getOAuthToken() {
 function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFirma, nombreAreaGG) {
 
   //Identificadores de los documentos a usar (id)
-  var capexPlantillaId = "1rLn1NCmShzZeHpv8A9mBKAve1yquwM4f"; // Id de la plantilla de capex
-  var pdfId = "1x601kZDbaIx2nSuT2nluGpUr7W9g9i8k";      // Id de la carpeta de PDFs
-  var tempId = "1F7ihMUVQZlsEyzxg90l8LBI-jzqYTJRP";     // Id de la carpeta temporal 
-  var idCarpetaParaVerQR = "1Gb_2YEB1OAUwYKSjoKSmh7lZu5xhgfic";     // Id de la nueva carpeta para el PDF inicial
+  var capexPlantillaId = "19Mw1NDbHLUGMxLnLRk9brWA6VcMj-CNaqIfT9Txg1jc"; // Id de la plantilla de capex
+  var pdfId = "1oMCyoT7fnurRZDyr_EhmyKr_oOC4Yl6n";      // Id de la carpeta de PDFs
+  var tempId = "1TCwbppsI3LmqYWgLltwTjypn2fYtLhY2";     // Id de la carpeta temporal
+  var idCarpetaParaVerQR = "1sLK9Z_wq2Iqh_HfqJRMLxPUVXzeAPWpo";     // Id de la nueva carpeta para el PDF inicial
   var idCarpetaCapexDoc = "1KUyNuFJDyHLFqafo-Mlv9jSs2OZitSYf";
 
   //Para poder realizar los cambios en Google Docs
@@ -21,7 +21,6 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   var carpetaPdf = DriveApp.getFolderById(pdfId);
   var carpetaTemp = DriveApp.getFolderById(tempId);
   var carpetaParaVerQR = DriveApp.getFolderById(idCarpetaParaVerQR);
-  var carpetaCapexDoc = DriveApp.getFolderById(idCarpetaCapexDoc);
 
   // Hacer una copia de la plantilla en la carpeta temporal
   var copiaPlantilla = capexPlantilla.makeCopy(carpetaTemp);
@@ -40,6 +39,7 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   var observaciones = registrosAprobados[0][14] ? registrosAprobados[0][14] : "";
   var usuarioEmail = registrosAprobados[0][2];
   var descriptionCompra = registrosAprobados[0][23] ? registrosAprobados[0][23] : "";
+  var tipoCapex = registrosAprobados[0][31] ? registrosAprobados[0][31] : "";
 
   var solicitante = cargarDataUsersPorEmail(usuarioEmail);
   console.log("Solicitante: " + solicitante);
@@ -61,6 +61,7 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   // Reemplazar datos generales en el documento
   var body = doc.getBody();
   //body.replaceText("{{solicitante}}", solicitante);
+  body.replaceText("{{tipoDeGasto}}", tipoCapex);
   body.replaceText("{{descripcionCompra}}", descriptionCompra);
   body.replaceText("{{justificacion}}", justificacion);
   body.replaceText("{{prioridad}}", prioridad);
@@ -108,7 +109,7 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
     var descripAllProductsEntry =
       `Centro de costo: ${centroDeCosto.toUpperCase()}\n` +
       `    - ${cantidad} ${equipo.toUpperCase()} ${marca.toUpperCase()} (${justifyCompra})
-             ${especificaciones}\n` +
+               ${especificaciones}\n` +
       `      Unit Price: US$: ${precio}\n` +
       `      Sub Total: US$: ${subtotal}\n` +
       `${i + 1 < registrosAprobados.length ? '--------------------------------------------------\n' : ''}`;
@@ -124,43 +125,52 @@ function generateCapex(totalCompra, registrosAprobados, aprobadoresEmail, conFir
   }
 
   body.replaceText("{{DESCRIPTALLPRODUCTS}}", descripAllProducts);
+  var urlDocumento = copiaPlantilla.getUrl();
+  var qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(urlDocumento)}`;
 
-  // Guardar el documento para obtener el enlace
-  doc.saveAndClose();
-  var archivoPdf = carpetaParaVerQR.createFile(copiaPlantilla.getAs('application/pdf')).setName(nombreArchivo);
-  var linkPdf = archivoPdf.getUrl();
-
-  // Generar el código QR usando la API de goqr.me
-  var qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(linkPdf)}`;
   var response = UrlFetchApp.fetch(qrCodeUrl);
   var qrBlob = response.getBlob().setName("qrCode.png");
 
-  // Volver a abrir el documento y agregar el QR
-  doc = DocumentApp.openById(copiaId);
-  body = doc.getBody();
   var qrParagraph = body.findText("{{codigoQR}}").getElement().getParent().asParagraph();
   qrParagraph.clear();
   qrParagraph.appendInlineImage(qrBlob);
 
   // Guardar el documento nuevamente como PDF
   doc.saveAndClose();
-  //archivoPdf.setTrashed(true); // Eliminar el PDF inicial
-  //var archivoPdfFinal = carpetaCapexDoc.createFile(copiaPlantilla.getAs('application/doc')).setName(nombreArchivo);
-  //var linkPdfFinal = archivoPdfFinal.getUrl();
 
-  var copiaDocumento = copiaPlantilla.makeCopy(nombreArchivo, carpetaCapexDoc);
-  var linkCapexDocFinal = copiaDocumento.getUrl();
-
-  // Configurar los permisos del archivo PDF final
-  //archivoPdfFinal.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-  // Eliminar la copia temporal del documento
-  DriveApp.getFileById(copiaId).setTrashed(true);
-
-  return {link: linkCapexDocFinal };
-  //return { pdf: archivoPdf, link: linkPdf };
-
-  console.log("Este es una subida de prueba")
-
+  return { link: urlDocumento };
 }
 
+function firmarCapex(encargadoFirmar, registros) {
+  var solicitudId = registros[0][0];
+  var linkCapex = registros[0][24];
+
+  var pdfFolderId = "1oMCyoT7fnurRZDyr_EhmyKr_oOC4Yl6n";
+
+  if (linkCapex) {
+    var date = new Date();
+    var dia = date.getDate();
+    var mes = date.getMonth() + 1;
+    var anio = date.getFullYear();
+    var horaCompleta = date.getHours() + ":" + date.getMinutes();
+
+    var docId = linkCapex.match(/[-\w]{25,}/)[0]; // Extraer ID del documento
+    var doc = DocumentApp.openById(docId);
+    var body = doc.getBody();
+
+    body.replaceText("{{gerenteGeneral}}", encargadoFirmar);
+    body.replaceText("{{date}}", dia + "/" + mes + "/" + anio + " " + horaCompleta);
+
+    doc.saveAndClose();
+
+    var file = DriveApp.getFileById(docId);
+    var pdfBlob = file.getAs(MimeType.PDF);
+    var nombreArchivo = `CAPEX_FIRM_${solicitudId}_${dia}-${mes}-${anio}.pdf`;
+    pdfBlob.setName(nombreArchivo);
+
+    var folder = DriveApp.getFolderById(pdfFolderId);
+    var archivoPDF = folder.createFile(pdfBlob);
+
+    return { link: archivoPDF.getUrl() };
+  }
+}

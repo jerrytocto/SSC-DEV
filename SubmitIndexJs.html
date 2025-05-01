@@ -6,9 +6,9 @@
     // Verificar si hay productos agregados
     const productNames = document.getElementById('productNames').value;
     // Verificar si se requiere un CAPEX
-    const requiereCapex = document.getElementById('requiereCapex').checked;
+    //const requiereCapex = document.getElementById('requiereCapex').checked;
     // verificar si se seleccionó algún tipo de capex
-    const tipoCapex = document.getElementById('tipoCapexInput').value;
+    //const tipoCapex = document.getElementById('tipoCapexInput').value;
 
     // Validamos si se añadieron productos a la SC
     if (!productNames || productNames.trim() === '') {
@@ -25,65 +25,6 @@
       resultModal.show();
       return; // Detiene la ejecución de la función
     }
-
-    // Luego validamos el CAPEX si está activo
-    if (requiereCapex && (!tipoCapex || tipoCapex.trim() === '')) {
-      const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-      const modalMessage = document.getElementById("modalMessage");
-
-      modalMessage.innerHTML = `
-          <div class="text-center mb-4">
-              <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 2.5rem;"></i>
-              <h5 class="mt-3 fw-bold">Selección de CAPEX Requerida</h5>
-              <p class="text-muted">Ha seleccionado que requiere CAPEX. Por favor, seleccione uno de los siguientes tipos:</p>
-          </div>
-          <div class="list-group">
-              <div class="list-group-item">
-                  <div class="d-flex w-100 justify-content-between">
-                      <h6 class="mb-1 text-primary fw-bold">Cumplimiento</h6>
-                  </div>
-                  <p class="mb-1 small text-muted">Un cambio en la legislación que requiera una inversión en su cumplimiento/seguridad. 
-                      <br><em>Ejemplo: puertas cortafuegos, sistemas eléctricos, almacenamiento</em>
-                  </p>
-              </div>
-              
-              <div class="list-group-item">
-                  <div class="d-flex w-100 justify-content-between">
-                      <h6 class="mb-1 text-primary fw-bold">Diversificación</h6>
-                  </div>
-                  <p class="mb-1 small text-muted">Inversión en una nueva ubicación / proyecto o línea de productos diferente / nueva tecnología.</p>
-              </div>
-              
-              <div class="list-group-item">
-                  <div class="d-flex w-100 justify-content-between">
-                      <h6 class="mb-1 text-primary fw-bold">Expansión</h6>
-                  </div>
-                  <p class="mb-1 small text-muted">Agregar más capacidad / puede ser otro equipo para solucionar un cuello de botella o simplemente para reducir el riesgo de falla.
-                      <br><em>Ejemplo: si falla una balanza detendría la prestación del servicio</em>
-                  </p>
-              </div>
-              
-              <div class="list-group-item">
-                  <div class="d-flex w-100 justify-content-between">
-                      <h6 class="mb-1 text-primary fw-bold">Reemplazo</h6>
-                  </div>
-                  <p class="mb-1 small text-muted">Reemplazo de un artículo viejo por un nuevo. El reemplazo se hace necesario debido al desgaste o a la obsolescencia.</p>
-              </div>
-              
-              <div class="list-group-item">
-                  <div class="d-flex w-100 justify-content-between">
-                      <h6 class="mb-1 text-primary fw-bold">Especulativo</h6>
-                  </div>
-                  <p class="mb-1 small text-muted">Contribuye indirectamente a los ingresos, es decir, instalaciones de bienestar para el personal.
-                      <br><em>Ejemplo: nuevo comedor, aire acondicionado, área de estacionamiento para el personal</em>
-                  </p>
-              </div>
-          </div>
-        `;
-      resultModal.show();
-      return;
-    }
-
 
     console.log(form);
     console.log(JSON.stringify(form, null, 2));

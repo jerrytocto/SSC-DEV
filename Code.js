@@ -1,6 +1,6 @@
 // Función que permite conectarse a una hoja de google sheet 
 function conectarHoja(sheetName) {
-  var spreadsheetId = '1lPud0z7KolH7jznXPI4HL2WZgpX9WAY5VBQE7e6hu2k'; // Reemplaza con el id de la hoja 
+  var spreadsheetId = '1-sTiLcNB8V3N3vYsSsqYoKYt7jXYqo0Ymk2_l-b-8QU'; // Reemplaza con el id de la hoja 
   var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
   console.log("Si se suben los datos desde el escritorio");
 
@@ -24,7 +24,7 @@ function obtenerDatosLogistica(sheetName) {
 }
 
 function conectarHojaLogistica(sheetName) {
-  var spreadsheetId = '10skv51IeQ9vTiaI1ON5eKdZJHpQcUTFjKB6uT6I8xY8'; // Reemplaza con el id de la hoja 
+  var spreadsheetId = '1D5TH7LVa0MFcoHql-mE00msXfU4WTctjcUFk02wxyYI'; // Reemplaza con el id de la hoja 
   var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
 
   if (sheetName) {
@@ -41,10 +41,6 @@ function include(fileName) {
 
 // Función que se activa cada vez que el responsable aprueba o desaprueba una solicitud
 function doGet(e) {
-
-  // Obtener el email de la persona que está aprobando la solicitud 
-  var userEmail = Session.getActiveUser().getEmail();
-  console.log("User Email in the function doGet: " + userEmail);
 
   // obteniendo el id de la solicitud
   var filterData = obtenerUltimosRegistros(e.parameter.solicitudId);
@@ -84,17 +80,12 @@ function doGet(e) {
     (e.parameter.solicitudId && e.parameter.estado && e.parameter.aprobadoresEmail)
   ) {
 
-    //if (!isUserAuthorized(userEmail)) {
-    //  return HtmlService.createHtmlOutput('No tienes permiso para realizar esta actividad, por favor contacta al área de IT para más información.');
-    //}
-    // Envía como parámetros el objeto e y la URL de la cotización
-    console.log("Resultado de isUserAuthorized: " + isUserAuthorized(userEmail));
     return handleEstadoRequest(e, filterData[0][21]);
 
   }
 
   var template = HtmlService.createTemplateFromFile("index");
-  template.pubUrl = ScriptApp.getService().getUrl(); // Obtener la URL del script dinámicamente
+  //template.pubUrl = ScriptApp.getService().getUrl(); // Obtener la URL del script dinámicamente
   return template.evaluate();
 }
 
@@ -347,7 +338,7 @@ function uploadFiles(form) {
 
 //Función para guardar la cotización en el drive
 function guardaCotizacionEnDrive(form, solicitudId) {
-  const folder = DriveApp.getFolderById('1fq-EeSNY93GpOdiUVEkXFWy0i539tdK8');
+  const folder = DriveApp.getFolderById('1LmCAtbwu0BAm4DX9tehB1jMkOlJqReUO');
 
   if (form.file == null || form.file == undefined || form.file == "") {
     return "";
@@ -387,9 +378,12 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
   var productos = obtenerDatosProductos(form);
 
   var observaciones = form.observaciones ? form.observaciones : "";
-  var requiereCapex = form.requiereCapex;
-  var tipoCapex = form.tipoCapex ? form.tipoCapex : "";
-  var trasnRequiredCapex = requiereCapex == "on" ? "SI" : "NO";
+  //var requiereCapex = form.requiereCapex;
+  //var tipoCapex = form.tipoCapex ? form.tipoCapex : "";
+  //var trasnRequiredCapex = requiereCapex == "on" ? "SI" : "NO";
+
+  var requiereCapex = form.requiereCapex; // "Sí" o "No"
+  var tipoCapex = form.tipoCapex ? form.tipoCapex : ""; // Tipo de inversión seleccionado o vacío
 
 
   productos.forEach((producto) => {
@@ -444,11 +438,11 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
     if (totalCompra <= 500) {
       var jefeArea = determinarDestinatario(totalCompra, formatSolicitante);
 
-      fila.push("Pendiente", jefeArea.solicitante.email, "", "", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", trasnRequiredCapex, tipoCapex);
+      fila.push("Pendiente", jefeArea.solicitante.email, "", "", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", requiereCapex, tipoCapex);
     } else {
       var primerAprobador = determinarDestinatario(totalCompra, formatSolicitante);
       //var segundoAprobador = determinarDestinatario(totalCompra, primerAprobador);
-      fila.push("Pendiente", primerAprobador.solicitante.email, "", "Pendiente", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", trasnRequiredCapex,tipoCapex);
+      fila.push("Pendiente", primerAprobador.solicitante.email, "", "Pendiente", "", "", cotizacionUrl, producto.justifyCompraProds, form.DescriptCompra, "", "", "", "", "", "", requiereCapex, tipoCapex);
     }
     sheetRegistro.appendRow(fila);
     console.log("Fila de la hoja de registro: " + fila);
@@ -505,13 +499,13 @@ function obtenerColumnaEstado(totalCompra, solicitudId, numberAprobadores) {
 // Extrae los datos de los productos del evento POST
 function obtenerDatosProductos(form) {
 
-  var nombres = limpiarCadena(form["productNames[]"]).split("/");
-  var marcas = limpiarCadena(form["productBrands[]"]).split("/");
-  var cantidades = limpiarCadena(form["productQuantities[]"]).split("/");
-  var precios = limpiarCadena(form["productPrices[]"]).split("/");
-  var especificaciones = limpiarCadena(form["productSpecs[]"]).split("/");
-  var centroCostos = limpiarCadena(form["productCentroCostos[]"]).split("/");
-  var justifyCompraProds = limpiarCadena(form["justifyCompraProds[]"]).split("/");
+  var nombres = limpiarCadena(form["productNames[]"]).split("!");
+  var marcas = limpiarCadena(form["productBrands[]"]).split("!");
+  var cantidades = limpiarCadena(form["productQuantities[]"]).split("!");
+  var precios = limpiarCadena(form["productPrices[]"]).split("!");
+  var especificaciones = limpiarCadena(form["productSpecs[]"]).split("!");
+  var centroCostos = limpiarCadena(form["productCentroCostos[]"]).split("!");
+  var justifyCompraProds = limpiarCadena(form["justifyCompraProds[]"]).split("!");
 
 
   return nombres.map((nombre, i) => ({
@@ -528,7 +522,7 @@ function limpiarCadena(cadena) {
   if (cadena == undefined || cadena == null) {
     return "";
   }
-  return cadena.replace(/\/\s*$/, "");
+  return cadena.replace(/!\s*$/, "");
 }
 
 // Calcula el subtotal de un producto
@@ -561,7 +555,7 @@ function actualizarEstado(solicitudId, nuevoEstado, aprobadorId, numberAprobador
         //verificar si el estado actual se puede modificar
         var estadoActual = row[columnaEstado];
 
-        if (estadoActual === "Pendiente" || estadoActual === "Observado") {
+        if (estadoActual === "Pendiente") {
 
           sheet.getRange(i + 1, columnaEstado + 1).setValue(nuevoEstado);
           sheet.getRange(i + 1, columnaEstado + 2).setValue(formatoUsuarioAprobador.solicitante.email);
@@ -646,7 +640,7 @@ function costoTotalSolicitud(solicitudId) {
   return totalCompra;
 }
 
-// Enviar correo electrónico de aprobación
+// Enviar correo electrónico después de la primera o segunda aprobación 
 function enviarCorreoAprobado(registros, totalCompra, formatoUsuarioAprobador, columnaEstado, cotizacionUrl) {
 
   //var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Compras");
@@ -691,27 +685,38 @@ function enviarCorreoAprobado(registros, totalCompra, formatoUsuarioAprobador, c
 
       //Correo ha sido revisado y aprobado por el gerente general
     } else if (columnaEstado == 18) {
-      //Luego de la aprobación del gerente general se envía el correo al área de compras
-      //destinatario = "jerrytocto@gmail.com"; //Correo del área de compras
 
-      //var arrayAprobadores = convertOfStringToArray(nombreAprobador);
 
-      //var emailJefeArea = registros[0][16];
-      //var gerenteArea = buscarUserPorEmail(emailJefeArea);
-      //var formatoGerenteArea = transformarData(gerenteArea);
-      //var nombreAreaGA = formatoGerenteArea.solicitante.names + " - " + formatoGerenteArea.solicitante.cargo;
+
       var nombreAreaGG = formatoUsuarioAprobador.solicitante.names + " - " + formatoUsuarioAprobador.solicitante.cargo;
       const aprobador = formatoUsuarioAprobador.solicitante.names;
       const cargoAprobador = formatoUsuarioAprobador.solicitante.cargo;
 
       //var nombreCargoAprobadores = nombreAreaGA + " y " + nombreAreaGG;
       var nombreCargoAprobadores = nombreAreaGG;
-      // Generar el CAPEX firmado
-      if (totalCompra > 1000) {
+
+      var esActivo = registros[0][30];
+      Logger.log("Es activo en la función enviar correo aprobado: " + esActivo);
+      var correoSolicitante = registros[0][2];
+      var fileSolictante = buscarUserPorEmail(correoSolicitante);
+      var formatoSolicitante = transformarData(fileSolictante);
+
+      var idAreaSolicitante = formatoSolicitante.solicitante.area;
+
+      var nombreAreaSolicitante = obtenerNombreArea(idAreaSolicitante) ? obtenerNombreArea(idAreaSolicitante) : "";
+
+      var debeFirmarCapex = (nombreAreaSolicitante === "TI" || nombreAreaSolicitante === "IT") || (esActivo === "SI" && totalCompra > 1000);
+
+      if (debeFirmarCapex) {
         var idSolicitud = registros[0][0];
-        var capexFirmado = generateCapex(totalCompra, registros, nombreCargoAprobadores, true, nombreAreaGG);
+        //var capexFirmado = generateCapex(totalCompra, registros, nombreCargoAprobadores, true, nombreAreaGG);
         //enviarCorreoGerenteGeneral
-        agregarLinkCapexFirmado(idSolicitud, capexFirmado.link);
+        var pdfCapexFirmado = firmarCapex(nombreAreaGG, registros);
+
+        if (pdfCapexFirmado) {
+          agregarLinkCapexFirmado(idSolicitud, pdfCapexFirmado.link);
+        }
+
       }
 
       enviarCorreoCompras(
@@ -724,6 +729,22 @@ function enviarCorreoAprobado(registros, totalCompra, formatoUsuarioAprobador, c
       eviarSolicitudAprobadaAlDBLogistica(registros, totalCompra, cotizacionUrl, aprobador, cargoAprobador);
     }
   }
+}
+
+function obtenerNombreArea(idAreaSolicitante) {
+  var datosDeAreas = obtenerDatos("Areas");
+
+  Logger.log("Datos de Áreas:", datosDeAreas);
+
+  for (var i = 0; i < datosDeAreas.length; i++) {
+    if (datosDeAreas[i][0] == idAreaSolicitante) { // Comparar con ==
+      Logger.log("Área encontrada:", datosDeAreas[i][1]);
+      return datosDeAreas[i][1]; // Devolver directamente el nombre del área
+    }
+  }
+
+  Logger.log("No se encontró el área para el ID:", idAreaSolicitante);
+  return ""; // Devolver una cadena vacía si no se encuentra
 }
 
 //Enviar data al sheet de logística 
@@ -775,17 +796,14 @@ function eviarSolicitudAprobadaAlDBLogistica(registrosAprobados, totalCompra, co
 
 //Función para buscar un users por email 
 function buscarUserPorEmail(email) {
-  //var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("users");
-  //var data = sheet.getDataRange().getValues();
 
   var data = obtenerDatos("users");
 
   for (var i = 0; i < data.length; i++) {
-    if (data[i][4] === email) {
+    if (data[i][2] === email) {
       return data[i];
     }
   }
-
 }
 
 // Función para añadir nuevo link del capex firmado
@@ -811,10 +829,12 @@ function enviarCorreoGerenteGeneral(
   esNotificacion
 ) {
   var htmlTemplate = HtmlService.createTemplateFromFile("tablaRequisitosEmail");
-  //var scriptUrl = ScriptApp.getService().getUrl(); // Obtén la URL del script
   var scriptUrl = obtenerUrl();
-  var generarCapex = registrosAprobados[0][30];
+  var esActivo = registrosAprobados[0][30];
   var linkCotizacion = registrosAprobados[0][21] ? registrosAprobados[0][21] : "";
+
+  // Inicializar linkCapex con un valor por defecto
+  htmlTemplate.linkCapex = "";  // <- Añadido inicialización
 
   // Configuración del template HTML
   htmlTemplate.solicitudId = registrosAprobados[0][0];
@@ -825,9 +845,11 @@ function enviarCorreoGerenteGeneral(
   htmlTemplate.centroDeCosto = registrosAprobados[0][10];
   htmlTemplate.observaciones = registrosAprobados[0][14] ? registrosAprobados[0][14] : "";
   htmlTemplate.descriptionCompra = registrosAprobados[0][23];
+  htmlTemplate.activo = registrosAprobados[0][30] ? registrosAprobados[0][30] : "NO";
+  htmlTemplate.tipoInversion = registrosAprobados[0][31] ? registrosAprobados[0][31] : "";
   htmlTemplate.tablaSolicitud = registrosAprobados;
   htmlTemplate.numberAprobadores = 2;
-  htmlTemplate.scriptUrl = scriptUrl; // Pasar la URL del script a la plantilla
+  htmlTemplate.scriptUrl = scriptUrl;
   htmlTemplate.linkCotizacion = linkCotizacion;
 
   var nombreAreaGA = formatoSolicitante.solicitante.names + " - " + formatoSolicitante.solicitante.cargo;
@@ -838,76 +860,63 @@ function enviarCorreoGerenteGeneral(
   htmlTemplate.paraAprobar = true;
   htmlTemplate.totalCompra = totalCompra.toFixed(2);
 
-  /*var adjuntos = [];
-
-  var cotizacionFile = cotizacionUrl != "" ? obtenerCotizacionDeDrive(cotizacionUrl) : "";
-  if (cotizacionFile != "") {
-    var adjuntos = [cotizacionFile.getAs(MimeType.PDF)];
-  } */
-
   var asunto;
-  /*if (generateCapex === "SI") {
+
+  try {
     if (!esNotificacion) {
-      var capex = generateCapex(totalCompra, registrosAprobados, nombreAreaGA, false);
-      actualizarHojaConEnlaceCapex(htmlTemplate.solicitudId, capex.link);
-      //if (capex && capex.pdf) {
-      //  adjuntos.push(capex.pdf);
-      //}
-      htmlTemplate.capex = capex.link;
+      Logger.log("Es activo: " + esActivo);
+      if (esActivo === "SI") {
+        var correoSolicitante = registrosAprobados[0][2]; // extraigo el correo del solicitante 
+        var fileSolictante = buscarUserPorEmail(correoSolicitante);  // Busco el usuario por email
+        var formatoSolicitante = transformarData(fileSolictante);    // Transformo la data del usuario
 
-      asunto = "Nueva Solicitud de Compra para Aprobar";
+        var idAreaSolicitante = formatoSolicitante.solicitante.area; // Extraigo el id del área del solicitante
+
+        // Extraigo el nombre del área del solicitante 
+        var nombreAreaSolicitante = obtenerNombreArea(idAreaSolicitante) ? obtenerNombreArea(idAreaSolicitante) : "";
+        Logger.log("Nombre del área solicitante: " + nombreAreaSolicitante);
+
+        if (nombreAreaSolicitante === "IT" || nombreAreaSolicitante === "TI") {
+          Logger.log("El área solicitante es IT o TI");
+          var capex = generateCapex(totalCompra, registrosAprobados, nombreAreaGA, false);
+          Logger.log("Link del capex: " + capex.link);
+
+          actualizarHojaConEnlaceCapex(htmlTemplate.solicitudId, capex.link);
+          htmlTemplate.linkCapex = capex.link;
+          asunto = "Nueva Solicitud de Compra para Aprobar";
+        } else if (totalCompra > 1000) {
+          var capex = generateCapex(totalCompra, registrosAprobados, nombreAreaGA, false);
+          actualizarHojaConEnlaceCapex(htmlTemplate.solicitudId, capex.link);
+          htmlTemplate.linkCapex = capex.link;
+          asunto = "Nueva Solicitud de Compra para Aprobar";
+        } else {
+          Logger.log("El área solicitante no es IT o TI y la solicitud es menor a $1000");
+          asunto = "Nueva Solicitud de Compra para Aprobar";
+        }
+      } else {
+        Logger.log("Lo que se está solicitando no es activo");
+        asunto = "Nueva Solicitud de Compra para Aprobar";
+      }
     } else {
       var capexUrl = registrosAprobados[0][24];
-      //var capex = obtenerCapexSinFirmarDeDrive(capexUrl);
-      //if (capex) {
-      //  adjuntos.push(capex);
-      //}
-      htmlTemplate.capex = capexUrl;
+      htmlTemplate.linkCapex = capexUrl || "";
       asunto = `¡PENDIENTE DE APROBACIÓN! SOLICITUD DE COMPRA N°${htmlTemplate.solicitudId}`;
     }
-  } else {
-    if (esNotificacion) {
-      asunto = `¡PENDIENTE DE APROBACIÓN! SOLICITUD DE COMPRA N°${htmlTemplate.solicitudId}`;
-    } else {
-      asunto = "Nueva Solicitud de Compra para Aprobar";
-    }
-  } */
 
-  if (!esNotificacion) {
-    if (generarCapex === "SI") {
-      //Generar capex
-      var capex = generateCapex(totalCompra, registrosAprobados, nombreAreaGA, false);
-      actualizarHojaConEnlaceCapex(htmlTemplate.solicitudId, capex.link);
-      htmlTemplate.linkCapex = capex.link;
+    var html = htmlTemplate.evaluate().getContent();
 
-      asunto = "Nueva Solicitud de Compra para Aprobar";
-
-    } else {
-      //Enviar correo sin capex
-      asunto = "Nueva Solicitud de Compra para Aprobar";
-    }
-  } else {
-    if (generarCapex === "SI") {
-      // Extraer link del capex del sheet
-      var capexUrl = registrosAprobados[0][24];
-      htmlTemplate.linkCapex = capexUrl;
-      asunto = `¡PENDIENTE DE APROBACIÓN! SOLICITUD DE COMPRA N°${htmlTemplate.solicitudId}`;
-    } else {
-      asunto = `¡PENDIENTE DE APROBACIÓN! SOLICITUD DE COMPRA N°${htmlTemplate.solicitudId}`;
-    }
+    GmailApp.sendEmail(
+      destinatario,
+      asunto,
+      "Nueva solicitud de compra.",
+      {
+        htmlBody: html
+      }
+    );
+  } catch (error) {
+    Logger.log("Error al enviar el correo: " + error);
+    throw error;
   }
-
-  var html = htmlTemplate.evaluate().getContent();
-
-  // Enviar un solo correo
-  GmailApp.sendEmail(
-    destinatario,
-    asunto,
-    "Nueva solicitud de compra.",
-    {
-      htmlBody: html
-    }
-  );
 }
 //https://drive.google.com/drive/folders/1T_vTy4BVj3ypQbes5jMm4yWYOaWmacF3
 //function actualizarHojaConEnlaceCapex(solicitudId, enlaceCapex)
@@ -918,7 +927,7 @@ function actualizarHojaConEnlaceCapex(solicitudId, enlaceCapex) {
   console.log("Enlace de capex : Función actualizarHojaConEnlaceCapex:  " + enlaceCapex);
 
 
-  var spreadsheetId = '1lPud0z7KolH7jznXPI4HL2WZgpX9WAY5VBQE7e6hu2k'; // Id de la hoja sheet
+  var spreadsheetId = '1-sTiLcNB8V3N3vYsSsqYoKYt7jXYqo0Ymk2_l-b-8QU';// Id de la hoja sheet
   var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
   var sheet = spreadsheet.getSheetByName("index");
   var data = sheet.getDataRange().getValues();
@@ -954,17 +963,41 @@ function enviarCorreoRemitente(email, solicitudId, estado, formatoSolicitante, c
   var solicitante = cargarDataUsersPorEmail(email);
   var formatSolic = transformarData(solicitante);
   var nombreSolicitante = formatSolic.solicitante.names;
+
+  var subject = "";
+  var bodyContent = "";
+  var statusClass = "";
+  var statusIcon = "";
+
+  // Determinar clase CSS y icono según el estado
+  if (estado === "Aprobado") {
+    statusClass = "success";
+    statusIcon = "✅";
+  } else if (estado === "Rechazado") {
+    statusClass = "danger";
+    statusIcon = "❌";
+  } else {
+    statusClass = "warning";
+    statusIcon = "⏳";
+  }
+
   //Notificar cuando la solicitud es menor a 500
   if (totalCompra <= 500 && estado != "Aprobado") {
-    var subject = `Actualización en su solicitud de comrpa #${solicitudId}`;
-    var body = `Estimado(a) ${nombreSolicitante}, LE INFORMAMOS QUE SU SOLICITUD DE COMPRA CON  ID ${solicitudId} ha sido ${estado}  POR ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}. 
-                AGRADECEMOS SU ATENCIÓN.`;
+    subject = `Actualización en su solicitud de comrpa #${solicitudId}`;
+    bodyContent = `
+      <p>Estimado(a) <strong>${nombreSolicitante}</strong>,</p>
+      <p>LE INFORMAMOS QUE SU SOLICITUD DE COMPRA CON ID <strong>${solicitudId}</strong> ha sido <span class="badge bg-${statusClass}">${estado}</span> POR ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.</p>
+      <p>AGRADECEMOS SU ATENCIÓN.</p>
+    `;
 
   } else if (totalCompra <= 500 && estado === "Aprobado") {
-    var subject = `Actualización en su solicitud de comrpa #${solicitudId}`;
-    var body = ` Estimado(a) ${nombreSolicitante}, Nos complace informarle que su solicitud de compra con ID ${solicitudId} ha sido ${estado} por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.
-                Su solicitud ahora ha sido derivada al área de logística(Compras) para materializar lo solicitado.
-                Agradecemos de antemano su comprensión y paciencia en este proceso. Si tiene alguna consulta o requiere información adicional, no dude en ponerse en contacto con el área de Logística.`;
+    subject = `Actualización en su solicitud de compra #${solicitudId}`;
+    bodyContent = `
+      <p>Estimado(a) <strong>${nombreSolicitante}</strong>,</p>
+      <p>Nos complace informarle que su solicitud de compra con ID <strong>${solicitudId}</strong> ha sido <span class="badge bg-${statusClass}">${estado}</span> por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.</p>
+      <p>Su solicitud ahora ha sido derivada al área de logística(Compras) para materializar lo solicitado.</p>
+      <p>Agradecemos de antemano su comprensión y paciencia en este proceso. Si tiene alguna consulta o requiere información adicional, no dude en ponerse en contacto con el área de Logística.</p>
+    `;
 
   } else if (totalCompra > 500 && columnaEstado == 15 && estado === "Aprobado") {
 
@@ -972,34 +1005,63 @@ function enviarCorreoRemitente(email, solicitudId, estado, formatoSolicitante, c
     var jefeAprobador = cargarDataUsers(aprobadorId);
     var formatoJefeAprobador = transformarData(jefeAprobador);
 
-    var subject = `Actualización en su solicitud de compra #${solicitudId}`;
-    var body = `Estimado(a) ${nombreSolicitante}, le informamos que su solicitud de compra con  ID ${solicitudId} ha sido ${estado}  por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}. 
-                Actualmente, se encuentra en evaluación por ${formatoJefeAprobador.solicitante.names} - ${formatoJefeAprobador.solicitante.cargo}. 
-                No dudes en contactar al responsable de la evaluación ante cualquier duda o consulta`;
+    subject = `Actualización en su solicitud de compra #${solicitudId}`;
+    bodyContent = `
+      <p>Estimado(a) <strong>${nombreSolicitante}</strong>,</p>
+      <p>Le informamos que su solicitud de compra con ID <strong>${solicitudId}</strong> ha sido <span class="badge bg-${statusClass}">${estado}</span> por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.</p>
+      <p>Actualmente, se encuentra en evaluación por ${formatoJefeAprobador.solicitante.names} - ${formatoJefeAprobador.solicitante.cargo}.</p>
+      <p>No dude en contactar al responsable de la evaluación ante cualquier duda o consulta.</p>
+    `;
 
   } else if (totalCompra > 500 && columnaEstado == 15 && estado != "Aprobado") {
-    var subject = `Actualización en su solicitud de compra #${solicitudId}`;
-    var body = `Estimado(a) ${nombreSolicitante}, 
-                le  informamos que su solicitu de compra con ID ${solicitudId} ha sido ${estado}  por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}. 
-                Agradecemos su comprensión.`;
+    subject = `Actualización en su solicitud de compra #${solicitudId}`;
+    bodyContent = `
+      <p>Estimado(a) <strong>${nombreSolicitante}</strong>,</p>
+      <p>Le informamos que su solicitud de compra con ID <strong>${solicitudId}</strong> ha sido <span class="badge bg-${statusClass}">${estado}</span> por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.</p>
+      <p>Agradecemos su comprensión.</p>
+    `;
 
   } else if (totalCompra > 500 && columnaEstado == 18 && estado === "Aprobado") {
-    var subject = `Novedades en tu solicitud de compra #${solicitudId}`;
-    var body = `Estimado(a) ${nombreSolicitante},
-                Nos complace informarle que su solicitud de compra con ID ${solicitudId} ha sido ${estado} por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.
-                Actualmente, su solicitud se encuentra siendo evaluada por el área de compras. 
-                
-                Si desea saber más sobre el estado de su solicitud, no dude en ponerse en contacto con el área de compras.`;
+    subject = `Novedades en tu solicitud de compra #${solicitudId}`;
+    bodyContent = `
+      <p>Estimado(a) <strong>${nombreSolicitante}</strong>,</p>
+      <p>Nos complace informarle que su solicitud de compra con ID <strong>${solicitudId}</strong> ha sido <span class="badge bg-${statusClass}">${estado}</span> por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.</p>
+      <p>Actualmente, su solicitud se encuentra siendo evaluada por el área de compras.</p>
+      <p>Si desea saber más sobre el estado de su solicitud, no dude en ponerse en contacto con el área de compras.</p>
+    `;
 
   } else if (totalCompra > 500 && columnaEstado == 18 && estado != "Aprobado") {
-    var subject = `Actualización en su solicitud de compra #${solicitudId}`;
-    var body = `Estimado(a) ${nombreSolicitante},
-               Le informamos que su solicitud de compra con ID ${solicitudId} ha sido ${estado} por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.
-               No dudes en contactar al responsable de la evaluación ante cualquier duda o consulta.`;
+    subject = `Actualización en su solicitud de compra #${solicitudId}`;
+    bodyContent = `
+      <p>Estimado(a) <strong>${nombreSolicitante}</strong>,</p>
+      <p>Le informamos que su solicitud de compra con ID <strong>${solicitudId}</strong> ha sido <span class="badge bg-${statusClass}">${estado}</span> por ${formatoSolicitante.solicitante.names} - ${formatoSolicitante.solicitante.cargo}.</p>
+      <p>No dude en contactar al responsable de la evaluación ante cualquier duda o consulta.</p>
+    `;
   }
 
 
-  GmailApp.sendEmail(email, subject, body);
+  // Cargar la plantilla HTML
+  var template = HtmlService.createTemplateFromFile('PlantillaNotificacion');
+
+  // Asignar datos a la plantilla
+  template.SUBJECT = subject;
+  template.SOLICITUD_ID = solicitudId;
+  template.ESTADO = estado;
+  template.STATUS_CLASS = statusClass;
+  template.BODY_CONTENT = bodyContent;
+  template.APROBADO_ICON = statusIcon;
+  template.CURRENT_YEAR = new Date().getFullYear();
+
+  // Evaluar plantilla y obtener HTML final
+  var htmlFinal = template.evaluate().getContent();
+
+  // Enviar correo HTML
+  GmailApp.sendEmail(
+    email,
+    subject,
+    "Este correo requiere un lector de correo compatible con HTML para visualizarse correctamente.", // Mensaje alternativo para clientes que no soportan HTML
+    { htmlBody: htmlFinal }
+  );
 }
 
 // Enviar correo al área de compras
@@ -1024,6 +1086,8 @@ function enviarCorreoCompras(
   htmlTemplate.centroDeCosto = registrosAprobados[0][10];
   htmlTemplate.observaciones = registrosAprobados[0][14] ? registrosAprobados[0][14] : "";
   htmlTemplate.descriptionCompra = registrosAprobados[0][23];
+  htmlTemplate.activo = registrosAprobados[0][30] ? registrosAprobados[0][30] : "NO";
+  htmlTemplate.tipoInversion = registrosAprobados[0][31] ? registrosAprobados[0][31] : "";
   htmlTemplate.tablaSolicitud = registrosAprobados;
   htmlTemplate.aprobadoresEmail = aprobadoresEmail;
   htmlTemplate.mostrarCampoAprobador = 1;
@@ -1038,24 +1102,6 @@ function enviarCorreoCompras(
   htmlTemplate.totalCompra = totalCompra.toFixed(2);
 
   var html = htmlTemplate.evaluate().getContent();
-
-  //var cotizacionFile = cotizacionUrl != "" ? obtenerCotizacionDeDrive(cotizacionUrl) : "";
-
-  /*var attachments = [];
-  if (cotizacionFile) {
-    attachments.push(cotizacionFile.getAs(MimeType.PDF));
-  }*/
-
-  /*
-  GmailApp.sendEmail(
-    destinatario,
-    "Nueva Solicitud de Compra Aprobada con Id: " + registrosAprobados[0][0],
-    "Nueva solicitud de compra aprobada.",
-    {
-      htmlBody: html,
-      attachments: attachments
-    }
-  ); */
 
   const correosDeCompras = obtenerCorreosCompras();
   if (correosDeCompras.length > 0) {
@@ -1089,6 +1135,8 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
   htmlTemplate.fechaSolicitud = filteredData[0][4];
   htmlTemplate.justificacion = filteredData[0][6];
   htmlTemplate.descriptionCompra = filteredData[0][23];
+  htmlTemplate.activo = filteredData[0][30] ? filteredData[0][30] : "NO";
+  htmlTemplate.tipoInversion = filteredData[0][31] ? filteredData[0][31] : "";
   htmlTemplate.centroDeCosto = filteredData[0][10];
   htmlTemplate.observaciones = filteredData[0][14] ? filteredData[0][14] : "";
   htmlTemplate.mostrarCampoAprobador = 0;
@@ -1104,20 +1152,6 @@ function enviarEmail(totalCompra, solicitudId, formatSolicitante, esAviso) {
   var destinatarioId = destinatario.solicitante.id;
 
   htmlTemplate.aprobadoresEmail = destinatarioId;
-
-
-
-  //var cotizacionFile = linkCotizacion != "" ? obtenerCotizacionDeDrive(linkCotizacion) : "";
-
-  //var fileId = pdfUrl.match(/[-\w]{25,}/); // Extrae el ID del archivo del enlace
-  //var file = DriveApp.getFileById(fileId);
-
-  //var attach = [];
-
-  /*if (cotizacionFile != "") {
-    attach.push(cotizacionFile.getAs(MimeType.PDF));
-
-  }*/
 
   // Configurar el correo para el solicitante
   if (!esAviso) {
@@ -1206,7 +1240,7 @@ function determinarDestinatario(totalCompra, formatoSolicitante) {
 
     } else {
       //En caso de que no tenga jefe se envía al gerente de área
-      if (formatoUserReceptor.solicitante.cargo == 2) {
+      if (formatoUserReceptor.solicitante.codigoCargo == 2) {
         //Enviar correo al gerente de Área
         return formatoUserReceptor;
       } else {
@@ -1226,7 +1260,7 @@ function obtenerCotizacionDeDrive(cotizacionUrl) {
   return cotizacionFile;
 }
 
-function obtenerCapexSinFirmarDeDrive(capexUrl) {
+/*function obtenerCapexSinFirmarDeDrive(capexUrl) {
   var match = capexUrl.match(/[-\w]{25,}/); // Extrae el ID del archivo del enlace
   if (match && match[0]) { // Verifica si se encontró alguna coincidencia
     var fileId = match[0]; // Accede al primer elemento del array de coincidencias, que es el ID del archivo
@@ -1235,7 +1269,22 @@ function obtenerCapexSinFirmarDeDrive(capexUrl) {
   } else {
     throw new Error('No se pudo extraer el ID del archivo de la URL proporcionada.');
   }
+} */
+function obtenerCapexSinFirmarDeDrive(capexUrl) {
+  var match = capexUrl ? capexUrl.match(/[-\w]{25,}/) : null; // Extrae el ID del archivo
+  if (match && match[0]) {
+    var fileId = match[0];
+    try {
+      var capexFile = DriveApp.getFileById(fileId); // Intenta obtener el archivo
+      return capexFile; // Si lo encuentra, lo devuelve
+    } catch (e) {
+      console.warn("Archivo no encontrado en Drive para ID: " + fileId); // Mensaje en consola para depuración
+      return ""; // Devuelve cadena vacía y continúa el flujo
+    }
+  }
+  return ""; // Devuelve cadena vacía si la URL es inválida
 }
+
 
 // Obtener los últimos registros de una solicitud
 function obtenerUltimosRegistros(solicitudId) {

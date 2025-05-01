@@ -46,7 +46,14 @@
           userId: response.user[0]
         }));
 
-        showLoggedInUI(response.user[1], response.user[2], response.user[0]);
+        //showLoggedInUI(response.user[1], response.user[2], response.user[0]);
+
+        // Mostramos el modal de verificación
+        var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+        verificationModal.show();
+
+        // Configurar la lógica del modal
+        setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
 
       } else {
         // Mostrar el mensaje de error
@@ -86,12 +93,20 @@
 
         if (userResponse.isValid) {
           console.log("El usuario encontrado es el siguiente: " + userResponse);
+          //Guardar la información en el localStorag
           localStorage.setItem('userSession', JSON.stringify({
             name: userResponse.user[1],
             email: userResponse.user[2],
             userId: userResponse.user[0]
           }));
-          showLoggedInUI(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
+          //showLoggedInUI(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
+
+          // Mostramos el modal de verificación
+          var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+          verificationModal.show();
+
+          // Configurar la lógica del modal
+          setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
         } else {
           var loginErrorDiv = document.getElementById('login-error');
           loginErrorDiv.innerText = userResponse.message;
@@ -105,9 +120,137 @@
       loginErrorDiv.innerText = "No se pudo obtener el correo electrónico. Por favor, inténtalo de nuevo.";
       loginErrorDiv.style.display = 'block';
     }
-    
   }
 
+  function setupVerificationModal(name, email, userId) {
+    const assetYes = document.getElementById("assetYes");
+    const assetNo = document.getElementById("assetNo");
+    const investmentTypeContainer = document.getElementById("investmentTypeContainer");
+    const investmentTypeSelect = document.getElementById("investmentType");
+    const investmentTooltip = document.getElementById("investmentTooltip");
+    const errorNotification = document.getElementById("errorNotification");
+    const confirmRequestButton = document.getElementById("confirmRequest");
+    const cancelModalButton = document.getElementById("cancelModal");
+    const closeModalButton = document.getElementById("closeModal");
+    const verificationModal = document.getElementById("verificationModal");
+
+    // Inputs ocultos para almacenar los valores de si es activo y el tipo de inversión 
+    const requiereCapexInput = document.getElementById("requiereCapex");
+    const tipoCapexInput = document.getElementById("tipoCapex");
+
+    // Crear instancia del modal
+    var modalInstance = new bootstrap.Modal(verificationModal, { backdrop: 'static', keyboard: false });
+
+    // Restaurar los valores previamente seleccionados antes de abrir el modal
+    if (requiereCapexInput.value === "SI") {
+      assetYes.checked = true;
+      investmentTypeContainer.style.display = "block";
+      investmentTypeSelect.value = tipoCapexInput.value; // Mantener selección previa
+    } else {
+      assetNo.checked = true;
+      investmentTypeContainer.style.display = "none";
+      investmentTypeSelect.value = ""; // Resetear si estaba en "NO"
+    }
+
+    // Mostrar el modal
+    modalInstance.show();
+
+    // Inicializar tooltip de Bootstrap
+    var tooltip = new bootstrap.Tooltip(investmentTooltip);
+
+    // Asegurarse de que los inputs ocultos tengan los valores iniciales correctos
+    //requiereCapexInput.value = "NO"; // Inicializar con "NO" por defecto
+    //tipoCapexInput.value = ""; // Inicializar vacío
+
+    assetYes.addEventListener("change", function () {
+      investmentTypeContainer.style.display = "block";
+      requiereCapexInput.value = "SI";  // Almacena "SI" cuando se selecciona "Sí"
+      console.log("Activo seleccionado: SI"); // Para depuración
+      updateTooltip();
+      validateForm();
+    });
+
+    assetNo.addEventListener("change", function () {
+      investmentTypeContainer.style.display = "none";
+      investmentTypeSelect.value = ""; // Reset selección
+      requiereCapexInput.value = "NO"; // Almacena "NO" cuando se selecciona "No"
+      tipoCapexInput.value = ""; // Resetear tipo de inversión
+      errorNotification.style.display = "none";
+      updateTooltip();
+      validateForm();
+    });
+
+    investmentTypeSelect.addEventListener("change", function () {
+      tipoCapexInput.value = investmentTypeSelect.value; // Almacena el tipo de inversión seleccionado
+      updateTooltip();
+      validateForm();
+    });
+
+    function updateTooltip() {
+      let selectedOption = investmentTypeSelect.options[investmentTypeSelect.selectedIndex];
+      let tooltipText = selectedOption.dataset.tooltip || "Seleccione una opción";
+      investmentTooltip.setAttribute("title", tooltipText);
+      tooltip.dispose();
+      tooltip = new bootstrap.Tooltip(investmentTooltip);
+    }
+
+    function validateForm() {
+      confirmRequestButton.disabled = assetYes.checked && investmentTypeSelect.value === "";
+    }
+
+    // **Evento al hacer clic en "Continuar"**
+    confirmRequestButton.addEventListener("click", function () {
+      if (assetYes.checked && investmentTypeSelect.value === "") {
+        errorNotification.style.display = "block";
+      } else {
+        errorNotification.style.display = "none";
+
+        // Verificar los valores antes de cerrar el modal
+        console.log("Valores finales - Requiere Capex:", requiereCapexInput.value);
+        console.log("Valores finales - Tipo Capex:", tipoCapexInput.value);
+
+        modalInstance.hide(); // Cerrar modal
+
+        setTimeout(() => {
+          document.querySelectorAll(".modal-backdrop").forEach(el => el.remove()); // Eliminar fondo gris
+          showLoggedInUI(name, email, userId); // Mostrar formulario SC
+        }, 300); // Esperar a que el modal se cierre
+      }
+    });
+
+    // Modificar la función resetModal para que no se llame automáticamente
+    function resetModal() {
+      // Solo resetear para una nueva apertura del modal, no cuando se confirma
+      assetNo.checked = true;
+      investmentTypeContainer.style.display = "none";
+      investmentTypeSelect.value = "";
+      requiereCapexInput.value = "NO";
+      tipoCapexInput.value = "";
+      errorNotification.style.display = "none";
+      confirmRequestButton.disabled = true;
+      updateTooltip();
+    }
+
+    // Llamar a resetModal solo cuando se cancela, no cuando se confirma
+    cancelModalButton.addEventListener("click", function () {
+      //resetModal();
+      modalInstance.hide();
+    });
+
+    closeModalButton.addEventListener("click", function () {
+      //resetModal();
+      modalInstance.hide();
+    });
+
+    // Eliminar el reseteo automático cuando se oculta el modal
+    verificationModal.addEventListener("hidden.bs.modal", function () {
+      modalInstance.dispose();
+      document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+    });
+
+    validateForm();
+  } 
+  
   // Función para validar email
   function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -124,17 +267,6 @@
     document.getElementById('request-button').style.display = 'block';
     document.getElementById('loggedUser').value = userId;
     loggedUserEmail = email;
-    startSessionTimer();
-  }
-
-  let sessionTimer;
-  const SESSION_TIMEOUT = 10 * 60 * 1000; // 10 minutos en milisegundos
-
-  function startSessionTimer() {
-    if (sessionTimer) {
-      clearTimeout(sessionTimer);
-    }
-    sessionTimer = setTimeout(endSession, SESSION_TIMEOUT);
   }
 
   function endSession() {
@@ -153,9 +285,6 @@
     document.getElementById('user-info').innerText = '';
     document.getElementById('loggedUser').value = '';
     loggedUserEmail = '';
-    if (sessionTimer) {
-      clearTimeout(sessionTimer);
-    }
   }
 
   function displayErrorMessage(message) {
@@ -165,14 +294,9 @@
   }
 
   // Verificar si hay una sesión activa al cargar la página
-  // Verificar si hay una sesión activa al cargar la página
   window.addEventListener('load', function () {
     const userSession = JSON.parse(localStorage.getItem('userSession'));
-    if (userSession) {
-      showLoggedInUI(userSession.name, userSession.email, userSession.userId);
-    } else {
-      resetUIForLogin();
-    }
+    resetUIForLogin();
   });
 
   // Manejador del botón de cerrar sesión
@@ -185,22 +309,52 @@
     localStorage.removeItem('userSession');
   });
 
-  // Manejador del botón de solicitud de compra
+  // Manejador del botón de nueva solicitud de compra
   document.getElementById('request-button').addEventListener('click', function () {
 
+    // Recuperar los valores almacenados en localStorage
+    const userSession = JSON.parse(localStorage.getItem('userSession'));
     // Actualizar el último clic a "formulario"
     lastClicked = 'formulario';
 
-    // Esperar un breve momento para asegurar que el último clic sea respetado
-    setTimeout(() => {
-      // Verificar si el último clic es todavía "formulario"
-      if (lastClicked === 'formulario') {
-        // Mostrar el formulario de solicitud de compra
-        document.getElementById('form-container').style.display = 'block';
-        // Ocultar la tabla de solicitudes de compra
-        document.getElementById('requests-table').style.display = 'none';
-      }
-    }, 50);
+    if (userSession) {
+      const userName = userSession.name;
+      const userEmail = userSession.email;
+      const userId = userSession.userId;
+
+      console.log("Nombre del usuario:", userName);
+      console.log("Correo electrónico:", userEmail);
+      console.log("ID del usuario:", userId);
+
+      // Esperar un breve momento para asegurar que el último clic sea respetado
+      setTimeout(() => {
+        // Verificar si el último clic es todavía "formulario"
+        if (lastClicked === 'formulario') {
+          // Mostrar el formulario de solicitud de compra
+          // Mostramos el modal de verificación
+          var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+          verificationModal.show();
+          // Configurar la lógica del modal
+          setupVerificationModal(userName, userEmail, userId);
+          // Ocultar la tabla de solicitudes de compra
+          document.getElementById('requests-table').style.display = 'none';
+        }
+      }, 50);
+
+    } else {
+
+      resetUIForLogin();
+
+      // Ocultar la tabla de solicitudes de compra
+      document.getElementById('requests-table').style.display = 'none';
+      console.log("No hay datos en la sesión.");
+    }
+  });
+
+  // Función para manejar el cierre del modal para la selección si lo solictado es o no un activo. 
+  verificationModal.addEventListener("hidden.bs.modal", function () {
+    document.body.style.overflow = "auto";
+    document.body.style.paddingRight = "0px";
   });
 
   // Manejador del enlace de "Mis solicitudes" en el navbar
@@ -605,13 +759,13 @@
       productTable.appendChild(newRow);
 
       //Añadir cada uno de los campos del formulario a los inputs ocultos
-      document.getElementById("productNames").value += `${productName}/`;
-      document.getElementById("productBrands").value += `${productBrand}/`;
-      document.getElementById("productQuantities").value += `${productQuantity}/`;
-      document.getElementById("productPrices").value += `${productPrice}/`;
-      document.getElementById("productSpecs").value += `${productSpecs}/`;
-      document.getElementById("productCentroCostos").value += `${productCentroCostos}/`;
-      document.getElementById("justifyCompraProds").value += `${justifyCompraProd}/`;
+      document.getElementById("productNames").value += `${productName}!`;
+      document.getElementById("productBrands").value += `${productBrand}!`;
+      document.getElementById("productQuantities").value += `${productQuantity}!`;
+      document.getElementById("productPrices").value += `${productPrice}!`;
+      document.getElementById("productSpecs").value += `${productSpecs}!`;
+      document.getElementById("productCentroCostos").value += `${productCentroCostos}!`;
+      document.getElementById("justifyCompraProds").value += `${justifyCompraProd}!`;
 
       // Limpiar los campos del modal
       clearProductModal();

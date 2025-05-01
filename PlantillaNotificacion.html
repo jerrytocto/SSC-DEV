@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= SUBJECT; ?></title>
+  <style>
+    /* Estilos básicos inspirados en Bootstrap */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      border-bottom: 2px solid #f3f3f3;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .logo {
+      max-width: 200px;
+      margin-bottom: 10px;
+    }
+    .content {
+      padding: 20px 0;
+    }
+    .footer {
+      border-top: 2px solid #f3f3f3;
+      padding-top: 15px;
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+    }
+    h1 {
+      color: #333;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 18px;
+      margin-top: 0;
+    }
+    p {
+      margin-bottom: 15px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 4px;
+      color: white;
+    }
+    .bg-success {
+      background-color: #28a745;
+    }
+    .bg-danger {
+      background-color: #dc3545;
+    }
+    .bg-warning {
+      background-color: #ffc107;
+      color: #333;
+    }
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      margin: 10px 0;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .tracking {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+      padding: 10px;
+      background-color: #f3f9ff;
+      border-radius: 8px;
+    }
+    .tracking-item {
+      text-align: center;
+      width: 24%;
+    }
+    .tracking-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #007bff;
+    }
+    /* Diseño responsivo */
+    @media (max-width: 480px) {
+      .container {
+        padding: 10px;
+      }
+      .tracking {
+        flex-direction: column;
+      }
+      .tracking-item {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- <img src="https://via.placeholder.com/200x50" alt="Logo Empresa" class="logo"> -->
+      <h1>Sistema de Solicitudes de Compra</h1>
+    </div>
+    
+    <div class="content">
+      <div class="card">
+        <h2>Solicitud de Compra # <?= SOLICITUD_ID; ?></h2>
+        <p>Estado: <span class="badge bg-<?=STATUS_CLASS; ?>"><?= ESTADO; ?></span></p>
+      </div>
+      <?!= BODY_CONTENT; ?>
+      
+    </div>
+    
+    <div class="footer">
+      <p>© <?= CURRENT_YEAR; ?> - Sistema de Gestión de Compras</p>
+      <p>Este es un correo automático, por favor no responda a este mensaje.</p>
+    </div>
+  </div>
+</body>
+</html>
