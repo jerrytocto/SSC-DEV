@@ -53,7 +53,7 @@
         verificationModal.show();
 
         // Configurar la lógica del modal
-        setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
+        setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0],userResponse.user[7]);
 
       } else {
         // Mostrar el mensaje de error
@@ -106,7 +106,7 @@
           verificationModal.show();
 
           // Configurar la lógica del modal
-          setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0]);
+          setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0],userResponse.user[7]);
         } else {
           var loginErrorDiv = document.getElementById('login-error');
           loginErrorDiv.innerText = userResponse.message;
@@ -122,7 +122,7 @@
     }
   }
 
-  function setupVerificationModal(name, email, userId) {
+  function setupVerificationModal(name, email, userId, cargoId) {
     const assetYes = document.getElementById("assetYes");
     const assetNo = document.getElementById("assetNo");
     const investmentTypeContainer = document.getElementById("investmentTypeContainer");
@@ -157,10 +157,6 @@
 
     // Inicializar tooltip de Bootstrap
     var tooltip = new bootstrap.Tooltip(investmentTooltip);
-
-    // Asegurarse de que los inputs ocultos tengan los valores iniciales correctos
-    //requiereCapexInput.value = "NO"; // Inicializar con "NO" por defecto
-    //tipoCapexInput.value = ""; // Inicializar vacío
 
     assetYes.addEventListener("change", function () {
       investmentTypeContainer.style.display = "block";
@@ -213,7 +209,7 @@
 
         setTimeout(() => {
           document.querySelectorAll(".modal-backdrop").forEach(el => el.remove()); // Eliminar fondo gris
-          showLoggedInUI(name, email, userId); // Mostrar formulario SC
+          showLoggedInUI(name, email, userId, cargoId); // Mostrar formulario SC
         }, 300); // Esperar a que el modal se cierre
       }
     });
@@ -258,7 +254,7 @@
   }
 
   //ALmecenar las variables de inicio de sesión en el local storage
-  function showLoggedInUI(name, email, userId) {
+  function showLoggedInUI(name, email, userId,cargoId) {
     document.getElementById('login-container').style.display = 'none';
     document.getElementById('navbar').style.display = 'block';
     document.getElementById('requests-table').style.display = 'none';
@@ -306,6 +302,7 @@
     clearForm();
     event.preventDefault();
     endSession();
+    //document.getElementById('aprobarSolicitud-button').style.display = 'display: none';
     localStorage.removeItem('userSession');
   });
 

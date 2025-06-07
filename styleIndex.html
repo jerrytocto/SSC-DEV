@@ -1,0 +1,196 @@
+<style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+    }
+
+    .flex-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .content {
+        flex: 1;
+    }
+
+    .footer {
+        background: #f8f9fa;
+        padding: 10px 0;
+        text-align: center;
+    }
+
+    #login-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        border-color: red;
+        /* Rojo */
+    }
+
+    .input-group-text {
+        background-color: red;
+        /* Rojo */
+        color: #fff;
+    }
+
+    .btn-primary {
+        background-color: red;
+        /* Rojo */
+        border-color: red;
+        /* Rojo */
+    }
+
+    .btn-custom-red {
+        background-color: red;
+        /* Rojo personalizado */
+        border-color: red;
+        /* Rojo personalizado */
+        color: white;
+        /* Texto blanco */
+    }
+
+    .btn-custom-red:hover {
+        background-color: darkred;
+        /* Rojo oscuro */
+        border-color: darkred;
+        /* Rojo oscuro */
+        color: white;
+        /* Texto blanco */
+    }
+
+    #spinner {
+        display: none;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-width: 0.2em;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination button {
+        margin: 0 5px;
+        padding: 5px 10px;
+    }
+
+    #solicitudes-table .solicitud-row {
+        transition: all 0.3s ease;
+    }
+
+    #solicitudes-table .solicitud-row:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    #solicitudes-table .solicitud-row:hover td:last-child {
+        cursor: default;
+    }
+
+    #solicitudes-table .solicitud-row td:last-child {
+        background-color: white;
+    }
+
+    @media (min-width: 1200px) {
+        .modal-xl {
+            max-width: 90%;
+        }
+    }
+
+    #detalleModal .table {
+        font-size: 0.9rem;
+    }
+
+    #detalleModal .table td,
+    #detalleModal .table th {
+        padding: 0.5rem;
+    }
+
+    .bg-custom-gray {
+        background-color: #a0a0a0;
+        /* Puedes ajustar este color según tus preferencias */
+        color: white;
+    }
+
+
+    #userDropdown {
+        border: none;
+        padding: 0.375rem 0.75rem;
+    }
+
+    #userDropdown:focus {
+        box-shadow: none;
+    }
+
+    .navbar .dropdown-toggle::after {
+        vertical-align: middle;
+    }
+
+    /* Hacer el interruptor más grande */
+    .switch-large {
+        transform: scale(1.5);
+        border: 2px solid red;
+    }
+
+    /* Estilo cuando está activado */
+    .switch-large:checked {
+        border-color: green;
+        background-color: white !important;
+    }
+
+    /* Cambiar el color de la ruedita */
+    .switch-large::before {
+        background-color: red;
+    }
+
+    /* Cuando está activado, la ruedita se vuelve verde */
+    .switch-large:checked::before {
+        background-color: green;
+    }
+
+    /* Ajustes para centrar el texto y el switch */
+    .form-check {
+        align-items: center;
+    }
+
+    .form-check-label {
+        font-size: 1.2rem;
+    }
+
+    /* Cambiar el borde del select a rojo */
+    .form-select {
+        border: 2px solid red;
+    }
+
+    /* Cambiar el color de fondo y el texto cuando se pasa el mouse sobre una opción */
+    .form-select option:hover {
+        background-color: red;
+        color: white;
+    }
+
+    #dropdownCapex.form-select {
+        cursor: pointer;
+    }
+
+
+    #dropdownCapex.form-select {
+        cursor: pointer;
+    }
+
+    /* Ocultar el div del tipo de capex por defecto */
+    .tipo-capex-container {
+        display: none;
+    }
+</style>

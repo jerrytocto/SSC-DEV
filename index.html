@@ -9,243 +9,13 @@
 
   <?!= include('CSS'); ?>
   <?!= include('indexCss'); ?>
-
-  <style>
-    html,
-    body {
-      height: 100%;
-      margin: 0;
-    }
-
-    .flex-wrapper {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .content {
-      flex: 1;
-    }
-
-    .footer {
-      background: #f8f9fa;
-      padding: 10px 0;
-      text-align: center;
-    }
-
-
-
-
-
-    #login-container {
-      max-width: 400px;
-      margin: 50px auto;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
-    }
-
-    .form-control:focus {
-      box-shadow: none;
-      border-color: red;
-      /* Rojo */
-    }
-
-    .input-group-text {
-      background-color: red;
-      /* Rojo */
-      color: #fff;
-    }
-
-    .btn-primary {
-      background-color: red;
-      /* Rojo */
-      border-color: red;
-      /* Rojo */
-    }
-
-    .btn-custom-red {
-      background-color: red;
-      /* Rojo personalizado */
-      border-color: red;
-      /* Rojo personalizado */
-      color: white;
-      /* Texto blanco */
-    }
-
-    .btn-custom-red:hover {
-      background-color: darkred;
-      /* Rojo oscuro */
-      border-color: darkred;
-      /* Rojo oscuro */
-      color: white;
-      /* Texto blanco */
-    }
-
-    #spinner {
-      display: none;
-      width: 1.5rem;
-      height: 1.5rem;
-      border-width: 0.2em;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    .pagination button {
-      margin: 0 5px;
-      padding: 5px 10px;
-    }
-  </style>
-  <style>
-    #solicitudes-table .solicitud-row {
-      transition: all 0.3s ease;
-    }
-
-    #solicitudes-table .solicitud-row:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      background-color: #f8f9fa;
-      cursor: pointer;
-    }
-
-    #solicitudes-table .solicitud-row:hover td:last-child {
-      cursor: default;
-    }
-
-    #solicitudes-table .solicitud-row td:last-child {
-      background-color: white;
-    }
-
-    @media (min-width: 1200px) {
-      .modal-xl {
-        max-width: 90%;
-      }
-    }
-
-    #detalleModal .table {
-      font-size: 0.9rem;
-    }
-
-    #detalleModal .table td,
-    #detalleModal .table th {
-      padding: 0.5rem;
-    }
-
-    .bg-custom-gray {
-      background-color: #a0a0a0;
-      /* Puedes ajustar este color según tus preferencias */
-      color: white;
-    }
-
-
-    #userDropdown {
-      border: none;
-      padding: 0.375rem 0.75rem;
-    }
-
-    #userDropdown:focus {
-      box-shadow: none;
-    }
-
-    .navbar .dropdown-toggle::after {
-      vertical-align: middle;
-    }
-
-    /* Hacer el interruptor más grande */
-    .switch-large {
-      transform: scale(1.5);
-      border: 2px solid red;
-    }
-
-    /* Estilo cuando está activado */
-    .switch-large:checked {
-      border-color: green;
-      background-color: white !important;
-    }
-
-    /* Cambiar el color de la ruedita */
-    .switch-large::before {
-      background-color: red;
-    }
-
-    /* Cuando está activado, la ruedita se vuelve verde */
-    .switch-large:checked::before {
-      background-color: green;
-    }
-
-    /* Ajustes para centrar el texto y el switch */
-    .form-check {
-      align-items: center;
-    }
-
-    .form-check-label {
-      font-size: 1.2rem;
-    }
-
-    /* Cambiar el borde del select a rojo */
-    .form-select {
-      border: 2px solid red;
-    }
-
-    /* Cambiar el color de fondo y el texto cuando se pasa el mouse sobre una opción */
-    .form-select option:hover {
-      background-color: red;
-      color: white;
-    }
-
-    #dropdownCapex.form-select {
-      cursor: pointer;
-    }
-
-
-    #dropdownCapex.form-select {
-      cursor: pointer;
-    }
-
-    /* Ocultar el div del tipo de capex por defecto */
-    .tipo-capex-container {
-      display: none;
-    }
-  </style>
+  <?!= include('styleIndex'); ?>
 </head>
 
 <body>
 
   <div class="flex-wrapper">
     <div class="content">
-
-      <!-- Login para iniciar sesión-->
-      <!--
-      <div id="login-container" class="card">
-        <div class="card-body">
-          <h4 class="text-center mb-4">Solicitud de compra</h4>
-          <h5 class="card-title text-center mb-5">Login</h5>
-          <form id="login-form">
-            <div class="mb-3 input-group">
-              <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-              <input type="text" class="form-control" id="username" placeholder="Nombre de usuario" required>
-            </div>
-            <div class="mb-3 input-group">
-              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-              <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
-            </div>
-            <button type="submit" class="btn btn-custom-red w-100" id="login-button">
-              Iniciar sesión
-              <div id="spinner" class="spinner-border text-light ms-2" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-            </button>
-          </form>
-          <div id="login-error" class="mt-3 text-danger text-center" style="display: none;">
-            Credenciales incorrectas.
-          </div>
-        </div>
-      </div>
-      -->
 
       <!-- Login para iniciar sesión-->
       <div id="login-container" class="card">
@@ -307,11 +77,14 @@
                   Solicitudes</a>
               </li>
               <li class="nav-item">
-                <!--<button id="request-button" class="btn" style="display: none; background-color: #fff; color: #000; border: 1px solid #ccc;">Nueva Solicitud</button>-->
                 <button id="request-button" class="btn"
                   style="background-color: #fff; color: #000; border: 1px solid #ccc; padding: 6px 12px;">Nueva
                   Solicitud</button>
               </li>
+              <!--<li class="nav-item">
+                <button id="aprobarSolicitud-button" class="btn"
+                  style="display: none; background-color: #fff; color: #000; border: 1px solid #ccc; padding: 6px 12px;"> Aprobar Solicitud</button>
+              </li> -->
             </ul>
             <div class="dropdown">
               <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown"
@@ -524,8 +297,8 @@
               <input type="number" class="form-control" id="productQuantityModal" required>
             </div>
             <div class="col-md-6">
-              <label for="productPriceModal" class="form-label">Precio Unitario($) *</label>
-              <input type="number" class="form-control" id="productPriceModal" required>
+              <label for="productPriceModal" class="form-label">Precio Unitario(USD) *</label>
+              <input type="number" class="form-control" id="productPriceModal" placeholder="Precio en USD" required>
             </div>
           </div>
           <div class="mb-3">
@@ -598,15 +371,15 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="verificationModalLabel">Confirm purchase type</h5>
+          <h5 class="modal-title" id="verificationModalLabel">Confirmar tipo de compra</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" id="closeModal"></button>
         </div>
         <div class="modal-body">
-          <p>¿The product(s) you wish to purchase is/are active?</p>
+          <p>¿ El/los producto(s) a solicitar es/son activo(s) ?</p>
 
           <div class="form-check">
             <input class="form-check-input" type="radio" name="assetOption" id="assetYes" value="yes">
-            <label class="form-check-label" for="assetYes">Yes</label>
+            <label class="form-check-label" for="assetYes">Si</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="assetOption" id="assetNo" value="no" checked>
@@ -615,16 +388,23 @@
 
           <!-- Desplegable de tipo de inversión (oculto por defecto) -->
           <div id="investmentTypeContainer" class="mt-3" style="display: none;">
-            <label for="investmentType" class="form-label">Select the expenditure type:</label>
+            <label for="investmentType" class="form-label">Seleccione el tipo de inversión/gasto:</label>
             <div class="d-flex align-items-center">
               <select class="form-select me-2" id="investmentType">
-                <option value="" selected>Select</option>
-                <option value="Compliance" data-tooltip="A change in legislation may necessitate investment in compliance / safety expenditure i.e. fire doors, electrical systems, storage">
-                  Compliance</option>
-                <option value="Diversification" data-tooltip=" Investment in a new location / project or different product linte / new technology">Diversification</option>
-                <option value="Expansion" data-tooltip="Adds more capacity. This could be anothen price of equipment to address a bottleneck / or simply to lessen the risk of failure. For example, you may jave one weighing balance which if it failed would halt service delivery.">Expansion
+                <option value="" selected>Seleccione</option>
+                <option value="Compliance"
+                  data-tooltip="Un cambio en la legislación que requiera una inversión en gastos de cumplimiento y/o seguridad. Por ejemplo: puertas contra incendios, sistemas eléctricos, almacenamiento">
+                  Cumplimiento</option>
+                <option value="Diversification"
+                  data-tooltip=" Inversión en una nueva ubicación / proyecto o en una línea de productos diferente / nueva tecnología.">
+                  Diversificación</option>
+                <option value="Expansinn"
+                  data-tooltip="Aumenta la capacidad. Esto podría ser otro equipo para abordar un cuello de botella o simplemente para reducir el riesgo de falla. Por ejemplo, puede que tenga una balanza que, si fallara, detendría la prestación del servicio">
+                  Expansion
                 </option>
-                <option value="maquinaria" data-tooltip="Indirectly contributes to revenue i.e. welfare facilities for staff, new canteen, air conditioning, pafking area for staff, etc.">Speculative
+                <option value="Speculative"
+                  data-tooltip="Contribuye indirectamente a los ingresos, es decir, instalaciones de bienestar para el personal, nuevo comedor, aire acondicionado, zona de estacionamiento para el personal, etc.">
+                  Especulativa
                 </option>
               </select>
               <!-- Icono con tooltip -->

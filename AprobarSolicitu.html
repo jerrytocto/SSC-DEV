@@ -1,0 +1,44 @@
+<script>
+
+    // Manejador del botón de nueva solicitud de compra
+    document.getElementById('aprobarSolicitud-button').addEventListener('click', function () {
+
+        // Recuperar los valores almacenados en localStorage
+        const userSession = JSON.parse(localStorage.getItem('userSession'));
+        // Actualizar el último clic a "formulario"
+        lastClicked = 'formulario';
+
+        if (userSession) {
+            const userName = userSession.name;
+            const userEmail = userSession.email;
+            const userId = userSession.userId;
+
+            console.log("Nombre del usuario:", userName);
+            console.log("Correo electrónico:", userEmail);
+            console.log("ID del usuario:", userId);
+
+            // Esperar un breve momento para asegurar que el último clic sea respetado
+            setTimeout(() => {
+                // Verificar si el último clic es todavía "formulario"
+                if (lastClicked === 'formulario') {
+                    // Mostrar el formulario de solicitud de compra
+                    // Mostramos el modal de verificación
+                    var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+                    verificationModal.show();
+                    // Configurar la lógica del modal
+                    setupVerificationModal(userName, userEmail, userId);
+                    // Ocultar la tabla de solicitudes de compra
+                    document.getElementById('requests-table').style.display = 'none';
+                }
+            }, 50);
+
+        } else {
+
+            resetUIForLogin();
+
+            // Ocultar la tabla de solicitudes de compra
+            document.getElementById('requests-table').style.display = 'none';
+            console.log("No hay datos en la sesión.");
+        }
+    });
+</script>
