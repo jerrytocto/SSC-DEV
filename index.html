@@ -134,6 +134,8 @@
         <div class="container">
           <h4 class="text-center"> Nueva Solicitud de Compra</h4>
           <form onsubmit="enviarform(event, this)">
+            <input type="hidden" id="productListJson" name="productListJson">
+            <input type="hidden" id="totalCompra" name="totalCompra" value="0">
             <div class="row">
               <!-- Descripción de la Compra -->
               <div class="col-md-6">
@@ -207,20 +209,23 @@
                   <th>Producto</th>
                   <th>Marca</th>
                   <th>Cantidad</th>
-                  <th>Precio</th>
+                  <th>Precio Unit. (USD)</th>
                   <th>Justificación específica</th>
                   <th>Especificaciones</th>
                   <th>Centro de costos</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="productTable">
-                <input type="hidden" id="productNames" name="productNames[]">
+                <!--<input type="hidden" id="productNames" name="productNames[]">
                 <input type="hidden" id="justifyCompraProds" name="justifyCompraProds[]">
                 <input type="hidden" id="productBrands" name="productBrands[]">
                 <input type="hidden" id="productQuantities" name="productQuantities[]">
                 <input type="hidden" id="productPrices" name="productPrices[]">
                 <input type="hidden" id="productSpecs" name="productSpecs[]">
-                <input type="hidden" id="productCentroCostos" name="productCentroCostos[]">
+                <input type="hidden" id="productCentroCostos" name="productCentroCostos[]"> -->
+                <!-- Campo oculto para almacenar la lista de productos en formato JSON -->
+
               </tbody>
             </table>
             <!-- Campo oculto para almacenar la información del usuario logueado -->
@@ -283,7 +288,7 @@
             <input type="text" class="form-control" id="productNameModal" required>
           </div>
           <div class="mb-3">
-            <label for="productNameModal" class="form-label">Justificación para la compra del producto</label>
+            <label for="justifyCompraProdModal" class="form-label">Justificación para la compra del producto</label>
             <input type="text" class="form-control" id="justifyCompraProdModal"
               placeholder="Por ejem: Ingreso de personal, renovación equipo">
           </div>
@@ -294,11 +299,12 @@
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="productQuantityModal" class="form-label">Cantidad *</label>
-              <input type="number" class="form-control" id="productQuantityModal" required>
+              <input type="number" class="form-control" min="0" step="any" id="productQuantityModal" required>
             </div>
             <div class="col-md-6">
               <label for="productPriceModal" class="form-label">Precio Unitario(USD) *</label>
-              <input type="number" class="form-control" id="productPriceModal" placeholder="Precio en USD" required>
+              <input type="number" class="form-control" min="0" step="any" id="productPriceModal"
+                placeholder="Precio en USD" required>
             </div>
           </div>
           <div class="mb-3">
@@ -306,7 +312,7 @@
             <textarea class="form-control" id="productSpecsModal" style="height: 80%;" required></textarea>
           </div>
           <div class="mb-3">
-            <label for="productCentroCostosModal" class="form-label">Centro de Costos *</label>
+            <label for="productCentroCosto" class="form-label">Centro de Costos *</label>
             <select id="productCentroCosto" class="form-control" name="productCentroCosto" required>
               <option value="" disabled selected>Seleccione</option>
             </select>
@@ -427,6 +433,54 @@
       </div>
     </div>
   </div>
+
+
+  <!-- Modal de Confirmación para Eliminar Producto -->
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-danger">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="confirmDeleteModalLabel">Eliminar Producto</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          ¿Estás seguro de que deseas eliminar el producto <strong id="productNameToDelete"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación de Envío -->
+  <div class="modal fade" id="confirmSendModal" tabindex="-1" aria-labelledby="confirmSendModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header text-white" style="background-color: #E83F4B;">
+          <h5 class="modal-title" id="confirmSendModalLabel">Advertencia antes de enviar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem; color: #ffc107;"></i>
+          </p>
+          <p class="text-center mt-2">
+            Asegúrese de que los precios de los productos estén expresados en <strong>dólares</strong>. <br>
+            ¿Desea continuar con el envío?
+          </p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="confirmSendBtn" class="btn btn-primary">Sí, enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Llamar al archivo JS -->
   <?!= include('JS'); ?>

@@ -4,10 +4,12 @@
     event.preventDefault();
 
     // Verificar si hay productos agregados
-    const productNames = document.getElementById('productNames').value;
+    const productListJson = document.getElementById('productListJson').value;
+    const totalCompra = parseFloat(document.getElementById('totalCompra').value.replace(/[^\d.-]/g, '')) || 0; // limpiamos símbolo $
+    const requiereCapex = document.getElementById('requiereCapex').value;
 
     // Validamos si se añadieron productos a la SC
-    if (!productNames || productNames.trim() === '') {
+    if (!productListJson || JSON.parse(productListJson).length === 0) {
       // No hay productos, mostrar mensaje de error
       const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
       const modalMessage = document.getElementById("modalMessage");
@@ -22,14 +24,67 @@
       return; // Detiene la ejecución de la función
     }
 
-    console.log(form);
-    console.log(JSON.stringify(form, null, 2));
+
+
+    // Mostrar modal de advertencia antes de continuar
+    const confirmSendModal = new bootstrap.Modal(document.getElementById('confirmSendModal'));
+
+    const confirmSendBody = document.querySelector('#confirmSendModal .modal-body');
+
+    let contenidoAdicional = '';
+
+    // Formatear a USD
+    const formattedTotalUSD = totalCompra.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
+
+    // Mostrar solo si requiereCapex está activado y el total supera los 1000 USD
+    if (requiereCapex === 'SI' && totalCompra > 1000) {
+      contenidoAdicional = `
+      <div class="text-center mt-3 p-3 border rounded" style="background-color: #f0f0f0; color: #333;">
+         Dado que el total de esta solicitud es de <strong>${formattedTotalUSD}</strong>, superando el umbral de <strong>$1,000.00</strong>, 
+          y considerando que incluye la adquisición de activo(s), 
+          es obligatorio que <strong>toda la información ingresada esté redactada en inglés</strong>.
+      </div>
+      `;
+    }
+
+    // Insertar el contenido del modal
+    confirmSendBody.innerHTML = `
+    <p class="text-center">
+      <i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem; color: #ffc107;"></i>
+    </p>
+    <p class="text-center mt-2">
+      Asegúrese de que los precios de los productos estén expresados en <strong>dólares</strong>.<br>
+      ¿Desea continuar con el envío?
+    </p>
+    ${contenidoAdicional}
+  `;
+
+
+
+    confirmSendModal.show();
+
+    // Cuando el usuario confirme desde el modal, se hace el envío real
+    const confirmSendBtn = document.getElementById('confirmSendBtn');
+
+    // Importante: remover event listeners anteriores para evitar múltiples envíos
+    confirmSendBtn.replaceWith(confirmSendBtn.cloneNode(true));
+    const newConfirmSendBtn = document.getElementById('confirmSendBtn');
+
+    newConfirmSendBtn.addEventListener("click", function () {
+      confirmSendModal.hide();
+      procesarEnvio(form); // Enviar de verdad
+    });
+  }
+
+  function procesarEnvio(form) {
     const button = document.getElementById("btn-submit");
     const modalMessage = document.getElementById("modalMessage");
     const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
     const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
 
-    // Muestra el modal de procesamiento
     processingModal.show();
     button.disabled = true;
 
@@ -37,50 +92,41 @@
       .withSuccessHandler(fileUrl => {
         processingModal.hide();
         modalMessage.innerHTML = `
-            <div class="text-center">
-              <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
-              <p class="mt-2">${fileUrl}</p>
-            </div>
-          `;
+        <div class="text-center">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+          <p class="mt-2">${fileUrl}</p>
+        </div>
+      `;
         resultModal.show();
         clearProductModal();
         button.disabled = false;
 
-        // Limpiar selects
+        // Limpiar campos
         document.getElementById('razonCompra').selectedIndex = 0;
         document.getElementById('inputState').selectedIndex = 0;
-
-        // Limpiar input de archivo
         document.getElementById('file').value = '';
-
-        // Limpiar textareas
         document.getElementById('justificacion').value = '';
         document.getElementById('observaciones').value = '';
         document.getElementById('justifyCompraProd').value = '';
 
-        // Limpiar tabla de productos
         const productTable = document.getElementById('productTable');
-        if (productTable) {
-          productTable.innerHTML = '';
-        }
+        if (productTable) productTable.innerHTML = '';
 
-        // Limpiar campos ocultos de productos
-        const hiddenInputs = ['productNames', 'productBrands', 'productQuantities', 'productPrices', 'productSpecs', 'productCentroCostos', 'justifyCompraProds'];
+        const hiddenInputs = ['justifyCompraProds'];
         hiddenInputs.forEach(id => {
           const element = document.getElementById(id);
-          if (element) {
-            element.value = '';
-          }
+          if (element) element.value = '';
         });
+
       })
       .withFailureHandler(error => {
         processingModal.hide();
         modalMessage.innerHTML = `
-            <div class="text-center">
-              <i class="bi bi-x-circle-fill text-danger" style="font-size: 2rem;"></i>
-              <p class="mt-2">Algo salió mal: ${error.message}</p>
-            </div>
-          `;
+        <div class="text-center">
+          <i class="bi bi-x-circle-fill text-danger" style="font-size: 2rem;"></i>
+          <p class="mt-2">Algo salió mal: ${error.message}</p>
+        </div>
+      `;
         resultModal.show();
         clearProductModal();
         button.disabled = false;
@@ -88,46 +134,8 @@
       .uploadFiles(form);
   }
 
-  /*
-  // Configuración de eventos para el modal de resultado
-  const resultModal = document.getElementById('resultModal');
-
-  // Manejar el foco y la accesibilidad al mostrar el modal
-  resultModal.addEventListener('show.bs.modal', function () {
-    // Desenfocar cualquier elemento activo
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
-  });
-
-  resultModal.addEventListener('shown.bs.modal', function () {
-    // Establecer el foco en el botón de cierre
-    const closeButton = this.querySelector('.btn-close');
-    if (closeButton) {
-      closeButton.focus();
-    }
-  });
 
 
-  // Recargar la página después del cierre del modal de resultado
-  resultModal.addEventListener('hidden.bs.modal', function () {
-    // Limpiar cualquier foco residual
-    this.querySelectorAll('button, a, input').forEach(el => {
-      el.blur();
-    });
-
-    // Recargar la página
-    window.location.reload(true);
-  });
-
-  // Manejadores de eventos para los botones de cierre
-  document.getElementById('closeResultModalBtn').addEventListener('click', function () {
-    window.location.reload(true);
-  });
-
-  document.getElementById('closeResultModalFooterBtn').addEventListener('click', function () {
-    location.replace(location.href);
-  });*/
   // Configuración de eventos para el modal de resultado
   const resultModal = document.getElementById('resultModal');
 

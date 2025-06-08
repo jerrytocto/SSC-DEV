@@ -481,7 +481,7 @@ function registrarProductos(form, solicitudId, sheetRegistro, cotizacionUrl, for
       estado1: "Pendiente",
       aprobador1: totalCompra <= 500 ? jefeArea.solicitante.email : primerAprobador.solicitante.email,
       cotizacionUrl: cotizacionUrl,
-      justificacionPorProducto : producto.justifyCompraProds || "",
+      justificacionPorProducto: producto.justifyCompraProds || "",
       descripcionCompra: form.DescriptCompra || "",
       requiereCapex: requiereCapex,
       tipoCapex: tipoCapex
@@ -540,7 +540,17 @@ function obtenerColumnaEstado(totalCompra, solicitudId, numberAprobadores) {
 // Extrae los datos de los productos del evento POST
 function obtenerDatosProductos(form) {
 
-  var nombres = limpiarCadena(form["productNames[]"]).split("!");
+  const jsonProductos = form.productListJson;
+
+  if (!jsonProductos) {
+    Logger.log("No se recibió productListJson.");
+    return;
+  }
+
+  // Parsear el JSON
+  const productos = JSON.parse(jsonProductos);
+
+  /*var nombres = limpiarCadena(form["productNames[]"]).split("!");
   var marcas = limpiarCadena(form["productBrands[]"]).split("!");
   var cantidades = limpiarCadena(form["productQuantities[]"]).split("!");
   var precios = limpiarCadena(form["productPrices[]"]).split("!");
@@ -557,6 +567,17 @@ function obtenerDatosProductos(form) {
     especificaciones: especificaciones[i] || "",
     centroCosto: centroCostos[i] || "",
     justifyCompraProds: justifyCompraProds[i] || ""
+  })); */
+
+  // Retornar la lista de productos tal cual o transformada si deseas
+  return productos.map(producto => ({
+    nombre: producto.name || "",
+    marca: producto.brand || "",
+    cantidad: parseFloat(producto.quantity) || 0,
+    precio: parseFloat(producto.price) || 0,
+    especificaciones: producto.specs || "",
+    centroCosto: producto.centroCostos || "",
+    justifyCompraProds: producto.justificacion || ""
   }));
 }
 function limpiarCadena(cadena) {
@@ -1188,7 +1209,7 @@ function enviarEmail(retornoDeResitrarProductos, solicitudId, formatSolicitante,
   htmlTemplate.activo = listProductos[0].requiereCapex || "NO";
   htmlTemplate.tipoInversion = listProductos[0].tipoCapex || "";
   htmlTemplate.centroDeCosto = listProductos[0].centroCosto;
-  htmlTemplate.observaciones = listProductos[0].observaciones|| "";
+  htmlTemplate.observaciones = listProductos[0].observaciones || "";
   htmlTemplate.mostrarCampoAprobador = 0;
   htmlTemplate.paraAprobar = true;
   htmlTemplate.nombreCargoAprobador = '';

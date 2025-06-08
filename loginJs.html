@@ -53,7 +53,7 @@
         verificationModal.show();
 
         // Configurar la lógica del modal
-        setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0],userResponse.user[7]);
+        setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0], userResponse.user[7]);
 
       } else {
         // Mostrar el mensaje de error
@@ -106,7 +106,7 @@
           verificationModal.show();
 
           // Configurar la lógica del modal
-          setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0],userResponse.user[7]);
+          setupVerificationModal(userResponse.user[1], userResponse.user[2], userResponse.user[0], userResponse.user[7]);
         } else {
           var loginErrorDiv = document.getElementById('login-error');
           loginErrorDiv.innerText = userResponse.message;
@@ -245,8 +245,8 @@
     });
 
     validateForm();
-  } 
-  
+  }
+
   // Función para validar email
   function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -254,7 +254,7 @@
   }
 
   //ALmecenar las variables de inicio de sesión en el local storage
-  function showLoggedInUI(name, email, userId,cargoId) {
+  function showLoggedInUI(name, email, userId, cargoId) {
     document.getElementById('login-container').style.display = 'none';
     document.getElementById('navbar').style.display = 'block';
     document.getElementById('requests-table').style.display = 'none';
@@ -263,6 +263,7 @@
     document.getElementById('request-button').style.display = 'block';
     document.getElementById('loggedUser').value = userId;
     loggedUserEmail = email;
+    //let productList = [];
   }
 
   function endSession() {
@@ -720,75 +721,171 @@
     // Aquí puedes implementar la lógica para mostrar el estado de la solicitud en una ventana emergente
   }
 
-  // Script para manejar el modal y añadir productos a la tabla
-  const addProductBtn = document.getElementById("addProductBtn");
-  const saveProductBtn = document.getElementById("saveProductBtn");
-  const productTable = document.getElementById("productTable");
+  window.addEventListener('DOMContentLoaded', function () {
+    const addProductBtn = document.getElementById("addProductBtn");
 
-  /**
-  *   EVENTO PARA CUANDO SE QUIERA AÑADIR UN PRODUCTO A LA TABLA DE VISUALIZACIÓN DE PRODUCTO, ESTE EVENTO SE LLAMA DESPUÉS DE 
-  *   PRESIONAR EN EL BOTÓN AÑADIR PRODUCTO DEL MODAL QUE PERMITE AÑADIR PRODUCTOS 
-  */
+    const saveProductBtn = document.getElementById("saveProductBtn");
+    const productTable = document.getElementById("productTable");
 
-  saveProductBtn.addEventListener("click", function () {
-    const productName = document.getElementById("productNameModal").value.trim();
-    const productBrand = document.getElementById("productBrandModal").value.trim();
-    const productQuantity = document.getElementById("productQuantityModal").value.trim();
-    const productPrice = document.getElementById("productPriceModal").value.trim();
-    const productSpecs = document.getElementById("productSpecsModal").value.trim();
-    const productCentroCostos = document.getElementById("productCentroCosto").value.trim();
-    const justifyCompraProd = document.getElementById("justifyCompraProdModal").value.trim();
+    let productList = []; // Almacenamos los productos que se enviarán en el formulario
+    let editingIndex = -1; // -1 si es nuevo producto, o índice si se está editando
 
-    // Verifica que los campos del modal de añadirProducto tengan contenido para poder añadir a la tabla
-    if (productName && productBrand && productQuantity && productPrice && productCentroCostos !== "" && productSpecs) {
-      const newRow = document.createElement("tr");
-      newRow.innerHTML = `
-          <td>${productName}</td>
-          <td>${productBrand}</td>
-          <td>${productQuantity}</td>
-          <td>${productPrice}</td>
-          <td>${justifyCompraProd}</td>
-          <td>${productSpecs}</td>
-          <td>${productCentroCostos}</td>
-        `;
+    // Evento para guardar producto desde el modal
+    saveProductBtn.addEventListener("click", function () {
+      const productName = document.getElementById("productNameModal").value.trim();
+      const productBrand = document.getElementById("productBrandModal").value.trim();
+      const productQuantity = document.getElementById("productQuantityModal").value.trim();
+      const productPrice = document.getElementById("productPriceModal").value.trim();
+      const productSpecs = document.getElementById("productSpecsModal").value.trim();
+      const productCentroCostos = document.getElementById("productCentroCosto").value.trim();
+      const justifyCompraProd = document.getElementById("justifyCompraProdModal").value.trim();
 
-      // Añado el nuevo producto 
-      productTable.appendChild(newRow);
+      if (productName && productBrand && productQuantity && productPrice && productCentroCostos && productSpecs) {
+        const product = {
+          name: productName,
+          brand: productBrand,
+          quantity: productQuantity,
+          price: productPrice,
+          specs: productSpecs,
+          centroCostos: productCentroCostos,
+          justificacion: justifyCompraProd
+        };
 
-      //Añadir cada uno de los campos del formulario a los inputs ocultos
-      document.getElementById("productNames").value += `${productName}!`;
-      document.getElementById("productBrands").value += `${productBrand}!`;
-      document.getElementById("productQuantities").value += `${productQuantity}!`;
-      document.getElementById("productPrices").value += `${productPrice}!`;
-      document.getElementById("productSpecs").value += `${productSpecs}!`;
-      document.getElementById("productCentroCostos").value += `${productCentroCostos}!`;
-      document.getElementById("justifyCompraProds").value += `${justifyCompraProd}!`;
+        if (editingIndex === -1) {
+          productList.push(product); // nuevo producto
+        } else {
+          productList[editingIndex] = product; // editar producto existente
+          editingIndex = -1;
+        }
 
-      // Limpiar los campos del modal
-      clearProductModal();
+        updateProductTable();
+        clearProductModal();
 
-      // Ocultar el modal
-      const addProductModal = document.getElementById('addProductModal');
-      const modal = bootstrap.Modal.getInstance(addProductModal);
-      modal.hide();
+        // Ocultar modal
+        const addProductModal = document.getElementById('addProductModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(addProductModal);
+        modal.hide();
 
-      // Mover el foco fuera del modal
-      saveProductBtn.blur();
+        // Quitar foco
+        saveProductBtn.blur();
 
-    } else {
-      alert("Por favor, complete todos los campos obligatorios.");
+      } else {
+        alert("Por favor, complete todos los campos obligatorios.");
+      }
+    });
+
+    function updateProductTable() {
+      const tbody = productTable.querySelector("tbody") || productTable;
+      tbody.innerHTML = "";
+
+      let total = 0; //Total acumulado de la compra
+
+      productList.forEach((product, index) => {
+
+        // Calcular el subtotal del producto
+        const cantidad = parseFloat(product.quantity.replace(/[^\d.]/g, ''));
+        const precio = parseFloat(product.price.replace(/[^\d.]/g, ''));
+        if (!isNaN(cantidad) && !isNaN(precio)) {
+          const subtotal = cantidad * precio;
+          total += subtotal;
+        }
+
+        const formattedPrice = parseFloat(product.price).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+        <td>${product.name}</td>
+        <td>${product.brand}</td>
+        <td>${product.quantity}</td>
+        <td>${formattedPrice}</td>
+        <td>${product.justificacion}</td>
+        <td>${product.specs}</td>
+        <td>${product.centroCostos}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-warning" onclick="editProduct(${index})">Editar</button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct(${index})">Eliminar</button>
+        </td>
+      `;
+        tbody.appendChild(row);
+      });
+
+      //Formatear el total a dos decimales y separador de miles una coma
+      const formattedTotal = total.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+      // Agregar fila para el total de la compra
+      if (productList.length > 0) {
+        const totalRow = document.createElement("tr");
+        totalRow.innerHTML = `
+            <td colspan="3" class="text-end"><strong>Total Compra:</strong></td>
+            <td colspan="4">${formattedTotal}</td>
+          `;
+        tbody.appendChild(totalRow);
+      }
+
+
+      const hiddenInput = document.getElementById("productListJson");
+      const hiddenTotal = document.getElementById("totalCompra");
+      if (hiddenInput) {
+        hiddenInput.value = JSON.stringify(productList);
+        hiddenTotal.value = total; // Guardar el total de la compra
+        console.log("Valor almacenado en hiddenInput:", hiddenInput.value);
+      }
+      console.log("Lista de productos actualizada:", productList);
+    }
+
+    window.editProduct = function (index) {
+      const product = productList[index];
+      document.getElementById("productNameModal").value = product.name;
+      document.getElementById("productBrandModal").value = product.brand;
+      document.getElementById("productQuantityModal").value = product.quantity;
+      document.getElementById("productPriceModal").value = product.price;
+      document.getElementById("productSpecsModal").value = product.specs;
+      document.getElementById("productCentroCosto").value = product.centroCostos;
+      document.getElementById("justifyCompraProdModal").value = product.justificacion;
+
+      editingIndex = index;
+
+      const modal = new bootstrap.Modal(document.getElementById("addProductModal"));
+      modal.show();
+    }
+
+    let deleteIndex = -1;
+
+    window.deleteProduct = function (index) {
+      deleteIndex = index;
+
+      const product = productList[deleteIndex];
+      document.getElementById("productNameToDelete").textContent = product.name;
+
+      const confirmModal = new bootstrap.Modal(document.getElementById("confirmDeleteModal"));
+      confirmModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+      if (deleteIndex !== -1) {
+        productList.splice(deleteIndex, 1);
+        updateProductTable();
+        deleteIndex = -1;
+
+        const modalEl = document.getElementById("confirmDeleteModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+      }
+    });
+
+
+
+
+    function clearProductModal() {
+      document.getElementById("productNameModal").value = '';
+      document.getElementById("productBrandModal").value = '';
+      document.getElementById("productQuantityModal").value = '';
+      document.getElementById("productPriceModal").value = '';
+      document.getElementById("productSpecsModal").value = '';
+      document.getElementById("productCentroCosto").value = '';
+      document.getElementById("justifyCompraProdModal").value = '';
     }
   });
-
-  function clearProductModal() {
-    document.getElementById("productNameModal").value = '';
-    document.getElementById("productBrandModal").value = '';
-    document.getElementById("productQuantityModal").value = '';
-    document.getElementById("productPriceModal").value = '';
-    document.getElementById("productSpecsModal").value = '';
-    document.getElementById("productCentroCosto").value = '';
-    document.getElementById("justifyCompraProdModal").value = '';
-  }
 
 
   function clearForm() {
@@ -803,7 +900,6 @@
       document.getElementById('productTable').innerHTML = ''; // Limpia la tabla de productos
     }
   }
-
   // Eventos para mostrar y ocultar el modal de añadir producto
   //document.addEventListener('click', resetSessionTimer);
   //document.addEventListener('keypress', resetSessionTimer);
